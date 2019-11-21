@@ -1,0 +1,5 @@
+installation : pip install showdownpy
+               pip install requests (nécessaire pour faire marcher showdownpy)
+
+name : IDonFeelSoGud
+pwd : idonfeelsogud45
