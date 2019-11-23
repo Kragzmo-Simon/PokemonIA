@@ -18,6 +18,8 @@ with open('data/login.txt', 'rt') as f,\
     print("My pwd : ", password)
 
 class ChallengeClient(showdown.Client):
+    battle_current_turn = 1 # current turn
+
     async def on_private_message(self, pm):
         if pm.recipient == self:
             await self.cancel_challenge()
@@ -34,6 +36,26 @@ class ChallengeClient(showdown.Client):
     async def on_room_init(self, room_obj):
         if room_obj.id.startswith('battle-'):
             await asyncio.sleep(3)
+            
+            battle_continue = True
+            while battle_continue:
+                await asyncio.sleep(1)
+                if len(self.rooms) == 1:
+                    for key in self.rooms:
+                        current_battle = self.rooms.get(key)
+                        if self.battle_current_turn == current_battle.current_turn:
+                            self.battle_current_turn += 1
+
+                            # Do the move
+                            await room_obj.move(1,1)
+
+                            if self.battle_current_turn >= 10:
+                                battle_continue = False
+
+            # Choisir un switch
+            #await room_obj.switch(2,2)
+
+            # Forfeit
             await room_obj.say('Oh my, look at the time! Gotta go, gg.')
             await room_obj.forfeit()
             await room_obj.leave()
