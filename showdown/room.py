@@ -5,6 +5,7 @@ import math
 import time
 from collections import deque
 from . import utils, user
+import random
 
 class Room:
     """
@@ -296,6 +297,20 @@ class Battle(Room):
         await self.client.use_command(self.id, 'choose', 'move {}'
             .format(move_id),
             delay=delay, lifespan=lifespan)
+
+    @utils.require_client
+    async def make_decicion(self, client=None,
+        delay=0, lifespan=math.inf):
+        """
+        Selects a random move among the moves that can be executed.
+        """
+        switch_or_move = random.randint(0,4)
+        if switch_or_move:
+            move_id = random.randint(1,4)
+            await self.move(move_id,1)
+        else:
+            switch_id = random.randint(2,6)
+            await self.switch(switch_id,1)
 
     @utils.require_client
     async def undo(self, client=None, delay=0, lifespan=math.inf):

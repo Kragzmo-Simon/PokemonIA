@@ -3,3 +3,7 @@ installation : pip install showdownpy
 
 name : IDonFeelSoGud
 pwd : idonfeelsogud45
+
+
+Remarques : 
+dans le cas de uturn et voltswitch, il faut envoyer d'autres informations aussi

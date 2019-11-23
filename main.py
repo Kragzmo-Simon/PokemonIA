@@ -46,14 +46,10 @@ class ChallengeClient(showdown.Client):
                         if self.battle_current_turn == current_battle.current_turn:
                             self.battle_current_turn += 1
 
-                            # Do the move
-                            await room_obj.move(1,1)
+                            await room_obj.make_decicion()
 
-                            if self.battle_current_turn >= 10:
-                                battle_continue = False
-
-            # Choisir un switch
-            #await room_obj.switch(2,2)
+                            #if self.battle_current_turn >= 10:
+                            #    battle_continue = False
 
             # Forfeit
             await room_obj.say('Oh my, look at the time! Gotta go, gg.')
