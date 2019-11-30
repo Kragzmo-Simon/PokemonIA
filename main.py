@@ -14,8 +14,6 @@ with open('data/login.txt', 'rt') as f,\
      open('data/mono-ghost.txt', 'rt') as team:
     ghost_team = team.read()
     username, password = f.read().strip().splitlines()
-    print("My name : ", username)
-    print("My pwd : ", password)
 
 class ChallengeClient(showdown.Client):
     battle_current_turn = 1 # current turn

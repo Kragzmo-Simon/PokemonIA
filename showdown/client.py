@@ -12,6 +12,7 @@ import warnings
 import math
 from functools import wraps, partial
 from . import message, room, server, user, utils, docutils
+from .battle_parsing import *
 
 #Logging setup
 logger = logging.getLogger(__name__)
@@ -291,11 +292,21 @@ class Client(user.User):
         socket_input = await self.websocket.recv()
         logger.debug('<<< Received:\n{}'.format(socket_input))
 
+        #print("\n", socket_input)
+
+        if "active" in socket_input and "rqid" in socket_input:
+            assert len(self.rooms) == 1
+            for key in self.rooms:
+                current_battle = self.rooms.get(key)
+                own_team = parse_own_team_state(socket_input)
+                current_battle.update_teams(own_team, None)
+            
         if "turn|" in socket_input:
             assert len(self.rooms) == 1
             for key in self.rooms:
                 current_battle = self.rooms.get(key)
                 current_battle.add_turn()
+                current_battle.print_own_team()
 
         #Showdown sends this response on initial connection
         if socket_input == 'o':

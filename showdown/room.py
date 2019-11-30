@@ -193,8 +193,20 @@ class Battle(Room):
         self.winner, self.loser = None, None
         self.winner_id, self.loser_id = None, None
 
+        # teams
+        self.own_team = None
+        self.opponent_team = None
+
     def add_turn(self):
         self.current_turn += 1
+
+    def update_teams(self, own_team, opponent_team):
+        self.own_team = own_team
+        self.opponent_team = opponent_team
+
+    def print_own_team(self):
+        if self.own_team is not None:
+            self.own_team.self_print()
 
     def update(self, inp_type, *params): #TODO: Fix this up
         """
