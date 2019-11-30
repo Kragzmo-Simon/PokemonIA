@@ -6,10 +6,20 @@ pwd : idonfeelsogud45
 
 
 Remarques : 
+- Cas limites 
 dans le cas de uturn et voltswitch, il faut envoyer d'autres informations aussi
+gerer les attaques comme fake out et first impression
+gigamax
 
-gerer les attaques mieux dans la structure de données
+- Erreures importantes à traiter
+Y A UNE ERREUR DANS LE PARSING LORSQU'UN POKEMON MEURT (ADVERSE)
 
+- traitements futurs
 pour les buffs : on peut creer une classe separee réinitialisée à chaque switch
+trouver un moyen de synchroniser les /data des attaques / faire le data
+analyser les tours (parsing) + manager l'équipe adverse pour les extrapolations
 
-trouver un moyen de synchroniser les /data des attaques
+TOUTE L'IA MDR
+
+
+

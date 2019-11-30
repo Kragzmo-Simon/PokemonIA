@@ -197,13 +197,35 @@ class Battle(Room):
 
         # teams
         self.own_team = None
-        #self.own_team_already_parsed = False
         self.opponent_team = None
 
     def add_turn(self):
         self.current_turn += 1
 
     def update_own_team(self, socket_input):
+
+        # Active pokemon information
+        active_pokemon_moves = re.findall(r"moves.*canDynamax.*maxMoves.*}}", socket_input)
+
+        # dissociate normal moves info from maxmoves info
+        categories = re.findall(r"\[.*?\]", active_pokemon_moves[0])
+
+        # Normal moves
+        normal_moves = re.findall(r"{.*?}", categories[0])
+        active_pokemon_moves = []
+        for smogon_id, normal_move in enumerate(normal_moves):
+            move_informations = normal_move.split(",")
+
+            name = move_informations[1].split(":")[-1].replace("\\\"","").strip()
+            current_pp = move_informations[2].split(":")[-1].strip()
+            max_pp = move_informations[3].split(":")[-1].strip()
+            target = move_informations[4].split(":")[-1].replace("\\\"","").strip()
+            disabled = True if move_informations[5].split(":")[-1].replace("}","").strip() == "true"  else False
+
+            new_move = Move(name, smogon_id, target, disabled, current_pp, max_pp)
+            #new_move.self_print()
+            active_pokemon_moves.append(new_move)
+
         # Team construction
         side = re.findall(r"name.*pokemon.*\[.*}\]", socket_input)[0]
         pokemons = re.findall(r"{.*?}.*?}", side)
@@ -243,28 +265,11 @@ class Battle(Room):
                             attack,defense,spAttack,spDefense,speed,
                             move1,move2,move3,move4,
                             ability,base_ability,item, active)
+            if active:
+                new_pokemon.update_moves(active_pokemon_moves)
             self.own_team.add_pokemon(new_pokemon)
 
         """
-        # Active pokemon information
-        active_pokemon_moves = re.findall(r"moves.*canDynamax.*maxMoves.*}}", socket_input)
-
-        # dissociate normal moves info from maxmoves info
-        categories = re.findall(r"\[.*?\]", active_pokemon_moves[0])
-
-        # Normal moves
-        normal_moves = re.findall(r"{.*?}", categories[0])
-        for normal_move in normal_moves:
-            move_informations = normal_move.split(",")
-
-            name = move_informations[1].split(":")[-1].replace("\\\"","").strip()
-            current_pp = move_informations[2].split(":")[-1].strip()
-            max_pp = move_informations[3].split(":")[-1].strip()
-            target = move_informations[4].split(":")[-1].replace("\\\"","").strip()
-            disabled = True if move_informations[5].split(":")[-1].replace("}","").strip() == "true"  else False
-
-            new_move = Move(name, target, disabled, current_pp, max_pp)
-
         # Maxmoves
         maxmoves = re.findall(r"{.*?}", categories[1])
         for maxmove in maxmoves:
@@ -385,9 +390,21 @@ class Battle(Room):
         """
         Selects a random move among the moves that can be executed.
         """
+        print("Making a decision...")
+
+        self.own_team.print_active_pokemon()
+
+        possible_moves = self.own_team.get_active_pokemon_possible_moves()
+
+        #for move in possible_moves:
+        #    print("dat id : ", move.get_smogon_id())
+
+        # 1/4 chance of switching and 3/4 chance of moving
         switch_or_move = random.randint(0,4)
-        if switch_or_move:
-            move_id = random.randint(1,4)
+        if switch_or_move and len(possible_moves) > 0:
+            # will be used more effectively than just a randomint when the intelligent logic will be called
+            randomly_generated_move_id = random.randint(1,len(possible_moves))
+            move_id = possible_moves[randomly_generated_move_id-1].get_smogon_id() + 1
             await self.move(move_id,1)
         else:
             switch_id = random.randint(2,6)
