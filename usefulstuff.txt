@@ -1,4 +1,4 @@
-installation : pip install showdownpy
+﻿installation : pip install showdownpy
                pip install requests (nécessaire pour faire marcher showdownpy)
 
 name : IDonFeelSoGud
@@ -7,3 +7,9 @@ pwd : idonfeelsogud45
 
 Remarques : 
 dans le cas de uturn et voltswitch, il faut envoyer d'autres informations aussi
+
+gerer les attaques mieux dans la structure de données
+
+pour les buffs : on peut creer une classe separee réinitialisée à chaque switch
+
+trouver un moyen de synchroniser les /data des attaques

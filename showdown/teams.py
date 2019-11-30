@@ -24,6 +24,7 @@ class Team:
 class Pokemon:
 
     def __init__(self,  name,
+                        smogon_id,
                         level,
                         gender,
                         current_hp,
@@ -43,6 +44,9 @@ class Pokemon:
                         active):
         # Name
         self.name = name
+
+        # Id of smogon
+        self.smogon_id = smogon_id + 1
 
         # Level
         self.level = level
@@ -90,7 +94,7 @@ class Pokemon:
         #self.condition = 0
 
     def self_print(self):
-        print("\n", self.name, " (level", self.level,",", self.gender,") - active : ", self.active)
+        print("\n", self.smogon_id, " - ", self.name, " (level", self.level,",", self.gender,") - active : ", self.active)
         print("    hps - ", self.current_hp, "/", self.max_hp)
         print("    stats - ", self.attack, "/", self.defense, "/", self.special_attack, 
                 "/", self.special_defense, "/", self.speed)
