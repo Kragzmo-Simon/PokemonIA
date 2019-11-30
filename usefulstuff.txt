@@ -10,16 +10,23 @@ Remarques :
 dans le cas de uturn et voltswitch, il faut envoyer d'autres informations aussi
 gerer les attaques comme fake out et first impression
 gigamax
+knock off
 
 - Erreures importantes à traiter
 Y A UNE ERREUR DANS LE PARSING LORSQU'UN POKEMON MEURT (ADVERSE)
+Erreur sur outrage
+erreur de parsing sur uturn
+erreur sur debut (mandibuzz vs swoobat)
 
 - traitements futurs
-pour les buffs : on peut creer une classe separee réinitialisée à chaque switch
-trouver un moyen de synchroniser les /data des attaques / faire le data
-analyser les tours (parsing) + manager l'équipe adverse pour les extrapolations
+/data attaque
+/data pokemon (jai meme pas les types mdr)
+parsing des tours => buffs (on peut creer une classe separee réinitialisée à chaque switch)
+		  => extrapolation adverse
+				=> /data pokemon
+METTRE UN TRUC POUR ATTENDRE que les attaques soient bien reçues avant d'attaquer (par ex, un has_been_updated dans pok et move)
 
-TOUTE L'IA MDR
+- TOUTE L'IA MDR
 
 
 

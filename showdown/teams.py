@@ -29,7 +29,7 @@ class Team:
     def get_active_pokemon_possible_moves(self):
         for pokemon in self.pokemons:
             #pokemon.self_print()
-            if pokemon.is_active():
+            if pokemon is not None and pokemon.is_active():
                 return pokemon.get_possible_moves()
 
 class Pokemon:
@@ -147,10 +147,13 @@ class Move:
         self.current_pp = current_pp
         self.max_pp = max_pp
 
-        # Information below will be updated later on update call
+        # Information below will be updated when the data is retrieved from smogon
         self.types = [None] * 2
         self.power = 9000
         self.accuracy = 9000
+
+        # boolean to check if the smogon data has been retrieved and used
+        self.smogon_data_has_been_retrieved = False
 
         # self.gigamax = mettre toutes les infos du maxmove directement dans le move plutot que
         # de creer un second move
@@ -167,7 +170,7 @@ class Move:
     def self_print(self):
         print("\n", self.name, " (id : ", self.smogon_id, ", target : ", self.target, ", disabled : ", self.disabled,")")
         print("    pp : ", self.current_pp, "/", self.max_pp)
-        print("    types - ", self.types[0], " - ", self.types[1])
+        #print("    types - ", self.types)
         print("    power - ", self.power," / accuracy - ", self.accuracy)
 
 class Condition(Enum):

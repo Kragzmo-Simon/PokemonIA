@@ -199,84 +199,121 @@ class Battle(Room):
         self.own_team = None
         self.opponent_team = None
 
+        # pokemon and moves collections
+        self.pokemon_collection = []
+        self.pokemon_names_collection = []
+        self.moves_collection = []
+        self.moves_name_collection = []
+
     def add_turn(self):
         self.current_turn += 1
 
-    def update_own_team(self, socket_input):
+    async def update_own_team(self, socket_input):
+        try:
+            # Active pokemon information
+            active_pokemon_moves = re.findall(r"moves.*canDynamax.*maxMoves.*}}", socket_input)
 
-        # Active pokemon information
-        active_pokemon_moves = re.findall(r"moves.*canDynamax.*maxMoves.*}}", socket_input)
+            # dissociate normal moves info from maxmoves info
+            categories = re.findall(r"\[.*?\]", active_pokemon_moves[0])
 
-        # dissociate normal moves info from maxmoves info
-        categories = re.findall(r"\[.*?\]", active_pokemon_moves[0])
+            # Normal moves
+            normal_moves = re.findall(r"{.*?}", categories[0])
+            active_pokemon_moves = []
+            for smogon_id, normal_move in enumerate(normal_moves):
+                move_informations = normal_move.split(",")
 
-        # Normal moves
-        normal_moves = re.findall(r"{.*?}", categories[0])
-        active_pokemon_moves = []
-        for smogon_id, normal_move in enumerate(normal_moves):
-            move_informations = normal_move.split(",")
+                name = move_informations[1].split(":")[-1].replace("\\\"","").strip()
+                current_pp = move_informations[2].split(":")[-1].strip()
+                max_pp = move_informations[3].split(":")[-1].strip()
+                target = move_informations[4].split(":")[-1].replace("\\\"","").strip()
+                disabled = True if move_informations[5].split(":")[-1].replace("}","").strip() == "true"  else False
 
-            name = move_informations[1].split(":")[-1].replace("\\\"","").strip()
-            current_pp = move_informations[2].split(":")[-1].strip()
-            max_pp = move_informations[3].split(":")[-1].strip()
-            target = move_informations[4].split(":")[-1].replace("\\\"","").strip()
-            disabled = True if move_informations[5].split(":")[-1].replace("}","").strip() == "true"  else False
+                new_move = Move(name, smogon_id, target, disabled, current_pp, max_pp)
+                #new_move.self_print()
+                active_pokemon_moves.append(new_move)
 
-            new_move = Move(name, smogon_id, target, disabled, current_pp, max_pp)
-            #new_move.self_print()
-            active_pokemon_moves.append(new_move)
+            # Team construction
+            side = re.findall(r"name.*pokemon.*\[.*}\]", socket_input)[0]
+            pokemons = re.findall(r"{.*?}.*?}", side)
 
-        # Team construction
-        side = re.findall(r"name.*pokemon.*\[.*}\]", socket_input)[0]
-        pokemons = re.findall(r"{.*?}.*?}", side)
+            self.own_team = Team("p2")
 
-        self.own_team = Team("p2")
+            # arrays containing the moves and the pokemons names that have to be asked to smogon
+            moves_to_ask_smogon = []
+            pokemons_to_ask_smogon = []
+                    
+            for smogon_id,pokemon in enumerate(pokemons):
+                stats = re.split(r",", pokemon)
+
+                hp_stats = stats[-15].split(r":")[-1].replace("\\\"","").strip().split(r"/")
+                activity = stats[-14].split(r":")[-1].strip()
+
+                name = stats[1].split(r":")[-1].replace("\\\"","").strip()
+                level = stats[2].replace("\\\"","").replace("L","").strip()
+                current_hp = hp_stats[0]
+                max_hp = hp_stats[1]
+                active = True if activity == "true" else False
+                attack = stats[-13].split(r":")[-1].strip()
+                defense = stats[-12].split(r":")[-1].strip()
+                spAttack = stats[-11].split(r":")[-1].strip()
+                spDefense = stats[-10].split(r":")[-1].strip()
+                speed = stats[-9].split(r":")[-1].replace("}","").strip()
+                move1 = stats[-8].split(r":")[-1].replace("\\\"","").replace("[","").strip()
+                move2 = stats[-7].replace("\\\"","").strip()
+                move3 = stats[-6].replace("\\\"","").strip()
+                move4 = stats[-5].replace("\\\"","").replace("]","").strip()
+                ability = stats[-1].split(r":")[-1].replace("\\\"","").replace("}","").strip()
+                base_ability = stats[-4].split(r":")[-1].replace("\\\"","").replace("}","").strip()
+                item = stats[-3].split(r":")[-1].replace("\\\"","").replace("}","").strip()
+
+                if len(stats) == 19:
+                    gender = stats[3].replace("\\\"","").strip()
+                else:
+                    gender = None
                 
-        for smogon_id,pokemon in enumerate(pokemons):
-            stats = re.split(r",", pokemon)
+                new_pokemon = Pokemon(name,smogon_id,level,gender,current_hp,max_hp,
+                                attack,defense,spAttack,spDefense,speed,
+                                move1,move2,move3,move4,
+                                ability,base_ability,item, active)
 
-            hp_stats = stats[-15].split(r":")[-1].replace("\\\"","").strip().split(r"/")
-            activity = stats[-14].split(r":")[-1].strip()
+                if move1 not in moves_to_ask_smogon and move1 not in self.moves_name_collection:
+                    moves_to_ask_smogon.append(move1)
+                if move2 not in moves_to_ask_smogon and move2 not in self.moves_name_collection:
+                    moves_to_ask_smogon.append(move2)
+                if move3 not in moves_to_ask_smogon and move3 not in self.moves_name_collection:
+                    moves_to_ask_smogon.append(move3)
+                if move4 not in moves_to_ask_smogon and move4 not in self.moves_name_collection:
+                    moves_to_ask_smogon.append(move4)
 
-            name = stats[1].split(r":")[-1].replace("\\\"","").strip()
-            level = stats[2].replace("\\\"","").replace("L","").strip()
-            current_hp = hp_stats[0]
-            max_hp = hp_stats[1]
-            active = True if activity == "true" else False
-            attack = stats[-13].split(r":")[-1].strip()
-            defense = stats[-12].split(r":")[-1].strip()
-            spAttack = stats[-11].split(r":")[-1].strip()
-            spDefense = stats[-10].split(r":")[-1].strip()
-            speed = stats[-9].split(r":")[-1].replace("}","").strip()
-            move1 = stats[-8].split(r":")[-1].replace("\\\"","").replace("[","").strip()
-            move2 = stats[-7].replace("\\\"","").strip()
-            move3 = stats[-6].replace("\\\"","").strip()
-            move4 = stats[-5].replace("\\\"","").replace("]","").strip()
-            ability = stats[-1].split(r":")[-1].replace("\\\"","").replace("}","").strip()
-            base_ability = stats[-4].split(r":")[-1].replace("\\\"","").replace("}","").strip()
-            item = stats[-3].split(r":")[-1].replace("\\\"","").replace("}","").strip()
+                if name not in self.pokemon_names_collection:
+                    pokemons_to_ask_smogon.append(name)
 
-            if len(stats) == 19:
-                gender = stats[3].replace("\\\"","").strip()
-            else:
-                gender = None
-            
-            new_pokemon = Pokemon(name,smogon_id,level,gender,current_hp,max_hp,
-                            attack,defense,spAttack,spDefense,speed,
-                            move1,move2,move3,move4,
-                            ability,base_ability,item, active)
-            if active:
-                new_pokemon.update_moves(active_pokemon_moves)
-            self.own_team.add_pokemon(new_pokemon)
+                if active:
+                    new_pokemon.update_moves(active_pokemon_moves)
+                self.own_team.add_pokemon(new_pokemon)
+        
+            # TODO METTRE UN COUNT DES ATTAQUES / MOVES A RECUP POUR SLEEP LE BOT LE TEMPS DE LES RECUP
 
-        """
-        # Maxmoves
-        maxmoves = re.findall(r"{.*?}", categories[1])
-        for maxmove in maxmoves:
-            maxmove_lines = re.split(r",",maxmove)
-            maxmove_name = maxmove_lines[0].split(r":")[-1].replace("\\\"","").strip()
-            maxmove_target = maxmove_lines[1].split(r":")[-1].replace("}","").replace("\\\"","").strip()
-        """
+            print("collection moves : ", len(self.moves_name_collection))
+            print("collection pokemons : ", len(self.pokemon_names_collection))
+            # Send smogon the commands to retrieve the moves and pokemons data
+            for pokemon in pokemons_to_ask_smogon:
+                await self.get_M_or_P_data(pokemon)
+                self.pokemon_names_collection.append(pokemon)
+            for move in moves_to_ask_smogon:
+                await self.get_M_or_P_data(move)
+                self.moves_name_collection.append(move)
+
+            """
+            # Maxmoves
+            maxmoves = re.findall(r"{.*?}", categories[1])
+            for maxmove in maxmoves:
+                maxmove_lines = re.split(r",",maxmove)
+                maxmove_name = maxmove_lines[0].split(r":")[-1].replace("\\\"","").strip()
+                maxmove_target = maxmove_lines[1].split(r":")[-1].replace("}","").replace("\\\"","").strip()
+            """
+        except IndexError as err:
+            print(".................. Erreur : ", err)
 
     def print_own_team(self):
         if self.own_team is not None:
@@ -385,6 +422,20 @@ class Battle(Room):
             delay=delay, lifespan=lifespan)
 
     @utils.require_client
+    async def get_M_or_P_data(self, move_name, mega=False, client=None,
+        delay=0, lifespan=math.inf):
+        """
+        |coro|
+
+        Uses the specified client or the object's client attribute to get data
+        of one pokemon. The client must be one of the players in the battle 
+        for this to work.
+        """
+        await self.client.use_command(self.id, 'data', '{}'
+            .format(move_name),
+            delay=delay, lifespan=lifespan)
+
+    @utils.require_client
     async def make_decicion(self, client=None,
         delay=0, lifespan=math.inf):
         """
@@ -392,7 +443,7 @@ class Battle(Room):
         """
         print("Making a decision...")
 
-        self.own_team.print_active_pokemon()
+        #self.own_team.print_active_pokemon()
 
         possible_moves = self.own_team.get_active_pokemon_possible_moves()
 

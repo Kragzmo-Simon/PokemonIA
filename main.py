@@ -35,12 +35,17 @@ class ChallengeClient(showdown.Client):
         if room_obj.id.startswith('battle-'):
             await asyncio.sleep(3)
             
+            # used to set a forfeit turn
             battle_continue = True
             while battle_continue:
                 await asyncio.sleep(1)
+
+                # check the battle room
                 if len(self.rooms) == 1:
                     for key in self.rooms:
                         current_battle = self.rooms.get(key)
+
+                        # Check if an action is desired
                         if self.battle_current_turn == current_battle.current_turn:
                             self.battle_current_turn += 1
 
