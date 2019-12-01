@@ -32,6 +32,10 @@ class Team:
             if pokemon is not None and pokemon.is_active():
                 return pokemon.get_possible_moves()
 
+    def update_moves_with_smogon(self, smogon_move):
+        for pokemon in self.pokemons:
+            pokemon.update_move_data_with_smogon(smogon_move)
+
 class Pokemon:
 
     def __init__(self,  name,
@@ -119,6 +123,40 @@ class Pokemon:
                 possible_moves.append(move)
         return possible_moves
 
+    def update_move_data_with_smogon(self, smogon_move):
+        for index,move_name in enumerate(self.moves_names):
+            if smogon_move.has_name(move_name):
+                smogon_move_type = smogon_move.get_move_type()
+                smogon_move_category = smogon_move.get_category()
+                smogon_move_power = smogon_move.get_power()
+                smogon_move_accuracy = smogon_move.get_accuracy()
+                smogon_move_description = smogon_move.get_description()
+
+                # if the pokemon is active, its moves should already be defined and should be
+                # updated. if the pokemon is not active, its moves are not defined and should
+                # be created
+                if len(self.complete_moves) >= (index+1):
+                    pok_move = self.complete_moves[index]
+                    pok_move.update_smogon_data(smogon_move_type, 
+                                                smogon_move_category, 
+                                                smogon_move_power, 
+                                                smogon_move_accuracy, 
+                                                smogon_move_description)
+                else:
+                    new_move = Move(move_name)
+                    new_move.update_smogon_data(smogon_move_type, 
+                                                smogon_move_category, 
+                                                smogon_move_power, 
+                                                smogon_move_accuracy, 
+                                                smogon_move_description)
+                    
+                    # add the move in the pokemon moveset
+                    new_move_set = self.complete_moves
+                    new_move_set.append(new_move)
+                    self.update_moves(new_move_set)
+
+                print("Updating ", move_name, " (", self.name,")")
+
     def self_print(self):
         print("\n", self.smogon_id, " - ", self.name, " (level", self.level,",", self.gender,") - active : ", self.active)
         print("    hps - ", self.current_hp, "/", self.max_hp)
@@ -135,22 +173,28 @@ class Pokemon:
 class Move:
 
     def __init__(self,  name,
-                        smogon_id,
-                        target,
-                        disabled,
-                        current_pp,
-                        max_pp):
+                        smogon_id = None,
+                        target = None,
+                        disabled = None,
+                        current_pp = None,
+                        max_pp = None):
         self.name = name
+
+        # this id specifies the place of the pokemon in the team
         self.smogon_id = smogon_id
+        
+        # the target specifies "self", "allAdjacentFoes" or "Normal"
         self.target = target
         self.disabled = disabled
         self.current_pp = current_pp
         self.max_pp = max_pp
 
         # Information below will be updated when the data is retrieved from smogon
-        self.types = [None] * 2
+        self.types = None
         self.power = 9000
         self.accuracy = 9000
+        self.description = None
+        self.category = None
 
         # boolean to check if the smogon data has been retrieved and used
         self.smogon_data_has_been_retrieved = False
@@ -158,8 +202,22 @@ class Move:
         # self.gigamax = mettre toutes les infos du maxmove directement dans le move plutot que
         # de creer un second move
 
+    def update_smogon_data(self, move_type, category, power, accuracy, description):
+        self.types = move_type
+        self.power = power
+        self.accuracy = accuracy
+        self.description = description
+        self.category = category
+        self.smogon_data_has_been_retrieved = True
+
     def is_castable(self):
         if not self.disabled and int(self.current_pp) > 0:
+            return True
+        else:
+            return False
+
+    def has_name(self, move_name):
+        if self.name == move_name:
             return True
         else:
             return False
@@ -167,10 +225,25 @@ class Move:
     def get_smogon_id(self):
         return self.smogon_id
 
+    def get_move_type(self):
+        return self.types
+
+    def get_category(self):
+        return self.category
+
+    def get_power(self):
+        return self.power
+
+    def get_accuracy(self):
+        return self.accuracy
+
+    def get_description(self):
+        return  self.description
+
     def self_print(self):
         print("\n", self.name, " (id : ", self.smogon_id, ", target : ", self.target, ", disabled : ", self.disabled,")")
         print("    pp : ", self.current_pp, "/", self.max_pp)
-        #print("    types - ", self.types)
+        print("    types - ", self.types, " (", self.category,")")
         print("    power - ", self.power," / accuracy - ", self.accuracy)
 
 class Condition(Enum):

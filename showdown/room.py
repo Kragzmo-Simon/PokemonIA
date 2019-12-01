@@ -294,8 +294,9 @@ class Battle(Room):
         
             # TODO METTRE UN COUNT DES ATTAQUES / MOVES A RECUP POUR SLEEP LE BOT LE TEMPS DE LES RECUP
 
-            print("collection moves : ", len(self.moves_name_collection))
-            print("collection pokemons : ", len(self.pokemon_names_collection))
+            #print("collection moves : ", len(self.moves_name_collection))
+            #print("collection pokemons : ", len(self.pokemon_names_collection))
+
             # Send smogon the commands to retrieve the moves and pokemons data
             for pokemon in pokemons_to_ask_smogon:
                 await self.get_M_or_P_data(pokemon)
@@ -314,6 +315,96 @@ class Battle(Room):
             """
         except IndexError as err:
             print(".................. Erreur : ", err)
+            print("L'input faible : ", socket_input)
+
+    def update_smogon_data_pokemon(self, socket_input):
+        # move name
+        pokemon_link = re.findall(r"<a.*href.*?</a>", socket_input)
+        pokemon_name = re.findall(r">.*?<", pokemon_link[-1])[0].replace(">","").replace("<","").replace(" ","").strip().lower()
+
+        # types
+        pokemon_types_collection = []
+        pokemon_types = re.findall(r"alt=\\\".*?\\\"", socket_input)
+        for pok_type in pokemon_types:
+            pokemon_type = pok_type.replace("alt=\\\"","").replace("\\\"","").strip().lower()
+            pokemon_types_collection.append(pokemon_type)
+
+        # abilities
+        pokemon_abilities_collection = []
+        pokemon_abilities = re.findall(r"abilitycol.*?</span", socket_input)
+        for pok_ability in pokemon_abilities:
+            pokemon_abilities_names = re.findall(r">[a-zA-Z].*?<", pok_ability)
+            for pokemon_ability in pokemon_abilities_names:
+                pokemon_ability_name = pokemon_ability.replace(">","").replace("<","").replace(" ","").strip().lower()
+                pokemon_abilities_collection.append(pokemon_ability_name)
+
+        # stats
+        pokemon_stats = re.findall(r"/>[0-9]+</span>", socket_input)
+        pokemon_hp = re.findall(r">.*?<", pokemon_stats[0])[-1].replace(">","").replace("<","").replace(" ","").strip().lower()
+        pokemon_atk = re.findall(r">.*?<", pokemon_stats[1])[-1].replace(">","").replace("<","").replace(" ","").strip().lower()
+        pokemon_def = re.findall(r">.*?<", pokemon_stats[2])[-1].replace(">","").replace("<","").replace(" ","").strip().lower()
+        pokemon_speA = re.findall(r">.*?<", pokemon_stats[3])[-1].replace(">","").replace("<","").replace(" ","").strip().lower()
+        pokemon_speD = re.findall(r">.*?<", pokemon_stats[4])[-1].replace(">","").replace("<","").replace(" ","").strip().lower()
+        pokemon_spe = re.findall(r">.*?<", pokemon_stats[5])[-1].replace(">","").replace("<","").replace(" ","").strip().lower()
+        
+        # Display
+        """
+        print("\nname : " ,pokemon_name)
+        for pok_type in pokemon_types_collection:
+            print("type : ", pok_type)
+        for ability in pokemon_abilities_collection:
+            print("ability : ", ability)
+        print("hp : ", pokemon_hp)
+        print("atk : ", pokemon_atk)
+        print("def : ", pokemon_def)
+        print("speA : ", pokemon_speA)
+        print("speD : ", pokemon_speD)
+        print("spe : ", pokemon_spe)
+        """
+
+    def update_smogon_data_move(self, socket_input):
+        # move name
+        move_link = re.findall(r"<a.*href.*?</a>", socket_input)
+        move_name = re.findall(r">.*?<", move_link[-1])[0].replace(">","").replace("<","").replace(" ","").strip().lower()
+
+        # type and phys/spe
+        attributes = re.findall(r"alt=\\\".*?\\\"", socket_input)
+        move_type = attributes[-2].replace("alt=","").replace("\\\"","").strip().lower()
+        move_category = attributes[-1].replace("alt=","").replace("\\\"","").strip().lower()
+
+        # power and accuracy
+        caracteristics = re.findall(r"<br.*?</span>", socket_input)
+        move_power = None
+        if len(caracteristics) == 3:
+            move_power = caracteristics[-3].replace("<br>","").replace("</span>","").strip()
+            move_accuracy = caracteristics[-2].replace("<br>","").replace("</span>","").replace("%","").strip()
+        else:
+            move_accuracy = caracteristics[0].replace("<br>","").replace("</span>","").replace("%","").strip()
+            # if move_accuracy is_number
+
+        # additional info
+        description = re.findall(r"movedesccol.*?</span>", socket_input)
+        move_description = description[-1].replace("</span>","").replace("movedesccol\\\">","").strip().lower()
+        
+        new_move = Move(move_name)
+        new_move.update_smogon_data(move_type, move_category, move_power, move_accuracy, move_description)
+
+        if new_move not in self.moves_collection:
+            self.moves_collection.append(new_move)
+
+        # check if a pokemon in the team has the move in which case, the move is updated
+        self.own_team.update_moves_with_smogon(new_move)
+
+        # TODO add verification for enemy team
+        #new_move.self_print()
+        """
+        print("\nmove : " ,move_name)
+        print("type : ", move_type)
+        print("category : ", move_category)
+        print("power : ", move_power)
+        print("accuracy : ", move_accuracy)
+        print("description : ", move_description)
+        """
 
     def print_own_team(self):
         if self.own_team is not None:

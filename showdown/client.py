@@ -291,8 +291,8 @@ class Client(user.User):
         socket_input = await self.websocket.recv()
         logger.debug('<<< Received:\n{}'.format(socket_input))
 
-        #if "error" in socket_input:
-        #print("\n", socket_input)
+        if "error" in socket_input:
+            print("\nErreur ici : ", socket_input)
 
         if "active" in socket_input and "rqid" in socket_input:
             print("UPDATING STATE")
@@ -312,12 +312,16 @@ class Client(user.User):
             print("UPDATE OF TURN DONE")
 
         if "|raw|" in socket_input and "pokemonnamecol" in socket_input:
-            print("CECI EST UN POK")
-            # self.room => update_pokemon(socket_input)
+            assert len(self.rooms) == 1
+            for key in self.rooms:
+                current_battle = self.rooms.get(key)
+                current_battle.update_smogon_data_pokemon(socket_input)
 
         if "|raw|" in socket_input and "movenamecol" in socket_input:
-            print("CECI EST UN MOVE")
-            # self.room => update_move(socket_input)
+            assert len(self.rooms) == 1
+            for key in self.rooms:
+                current_battle = self.rooms.get(key)
+                current_battle.update_smogon_data_move(socket_input)
 
 
         #Showdown sends this response on initial connection
