@@ -41,11 +41,11 @@ class Team:
                 smogon_update, moves_or_pok_to_resend = pokemon.has_been_updated_with_smogon()
                 if not smogon_update:
                     return False, moves_or_pok_to_resend
-                print("Pokemon correctly updated : ", pokemon.get_name())
+                #print("Pokemon correctly updated : ", pokemon.get_name())
             else:
                 print("A pokemon is NONE")
                 return False, []
-        print("Everything has been updated\n\n")
+        print("The team was correctly updated")
         return True, []
 
     def update_moves_with_smogon(self, smogon_move):
@@ -303,7 +303,7 @@ class Pokemon:
                     new_move_set.append(new_move)
                     self.update_moves(new_move_set)
 
-                print("Updating ", move_name, " (", self.name,")")
+                #print("Updating ", move_name, " (", self.name,")")
 
     def self_print(self):
         print("\n", self.smogon_id, " - ", self.name, " (level", self.level,",", self.gender,") - active : ", self.active)

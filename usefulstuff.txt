@@ -18,17 +18,15 @@ Erreur sur outrage
 erreur de parsing sur uturn
 erreur sur debut (mandibuzz vs swoobat)
 
-bug dans les collections de moves : des fois la collection reelle a un elem en moins de ce qu'il faut
+=> mettre un truc pour check si les moves sont None dans le cas du pokemon actif (forceSwitch)
 
 - traitements futurs
-/data attaque => done
-/data pokemon (jai meme pas les types mdr) => done
 parsing des tours => buffs (on peut creer une classe separee réinitialisée à chaque switch)
 		  => extrapolation adverse
-Mise à jour des poks adverses + mise à jour des pokemons lors du state
-METTRE UN TRUC POUR ATTENDRE que les attaques soient bien reçues avant d'attaquer (par ex, un has_been_updated dans pok et move)
+Mise à jour des poks adverses
 
 - TOUTE L'IA MDR
+
 
 
 

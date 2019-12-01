@@ -212,7 +212,17 @@ class Battle(Room):
     async def update_own_team(self, socket_input):
         try:
             # Active pokemon information
-            active_pokemon_moves = re.findall(r"moves.*canDynamax.*maxMoves.*}}", socket_input)
+            active_pokemon_moves = re.findall(r"moves.*?side", socket_input)
+
+            """
+            # THIS SHOULD NOT HAPPEND HERE
+            if len(active_pokemon_moves) == 0:
+                check_force_switch = re.findall(r"forceSwitch.*?side", socket_input)
+                print("FORCE SWITCH : \n", check_force_switch)
+            """
+            pokemon_is_trapped = re.findall(r"trapped.*?:.*?}", active_pokemon_moves[0])
+            if len(pokemon_is_trapped) != 0 and "trapped" in pokemon_is_trapped[0]:
+                print("He's trapped")
 
             # dissociate normal moves info from maxmoves info
             categories = re.findall(r"\[.*?\]", active_pokemon_moves[0])
@@ -223,12 +233,19 @@ class Battle(Room):
             for smogon_id, normal_move in enumerate(normal_moves):
                 move_informations = normal_move.split(",")
 
-                name = move_informations[1].split(":")[-1].replace("\\\"","").strip()
-                current_pp = move_informations[2].split(":")[-1].strip()
-                max_pp = move_informations[3].split(":")[-1].strip()
-                target = move_informations[4].split(":")[-1].replace("\\\"","").strip()
-                disabled = True if move_informations[5].split(":")[-1].replace("}","").strip() == "true"  else False
+                name = move_informations[1].split(":")[-1].replace("\\\"","").replace("}","").strip() #
 
+                if len(move_informations) == 6:
+                    current_pp = move_informations[2].split(":")[-1].strip()
+                    max_pp = move_informations[3].split(":")[-1].strip()
+                    target = move_informations[4].split(":")[-1].replace("\\\"","").strip()
+                    disabled = True if move_informations[5].split(":")[-1].replace("}","").strip() == "true"  else False
+                else:
+                    current_pp = None
+                    max_pp = None
+                    target = None
+                    disabled = None
+                    
                 new_move = Move(name, smogon_id, target, disabled, current_pp, max_pp)
                 #new_move.self_print()
                 active_pokemon_moves.append(new_move)
@@ -266,6 +283,10 @@ class Battle(Room):
                 ability = stats[-1].split(r":")[-1].replace("\\\"","").replace("}","").strip()
                 base_ability = stats[-4].split(r":")[-1].replace("\\\"","").replace("}","").strip()
                 item = stats[-3].split(r":")[-1].replace("\\\"","").replace("}","").strip()
+
+                # For Debug concerns
+                if name == "Null" or name == "null":
+                    print("Pokemon Null : ", socket_input)
 
                 if len(stats) == 19:
                     gender = stats[3].replace("\\\"","").strip()
@@ -621,7 +642,7 @@ class Battle(Room):
                         print("Resending 2 : ", data_command_name)
                         await self.get_M_or_P_data(data_command_name)
 
-                print("Checking smogon data update...................... : ", smogon_data_has_not_been_updated)
+                #print("Checking smogon data update...................... : ", smogon_data_has_not_been_updated)
             await asyncio.sleep(2)
 
         print("Making a decision...")

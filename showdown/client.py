@@ -294,7 +294,7 @@ class Client(user.User):
         if "error" in socket_input:
             print("\nErreur ici : ", socket_input)
 
-        if "active" in socket_input and "rqid" in socket_input:
+        if "active" in socket_input and "rqid" in socket_input and "forceSwitch" not in socket_input and "wait" not in socket_input:
             print("UPDATING STATE")
             assert len(self.rooms) == 1
             for key in self.rooms:
@@ -302,6 +302,12 @@ class Client(user.User):
                 await current_battle.update_own_team(socket_input)
             print("UPDATE OF STATE DONE")
             
+        if "forceSwitch" in socket_input:
+            print("Amn't I supposed to switch?")
+            # TODO put best switch choosing method
+
+        #if "wait"
+
         if "turn|" in socket_input:
             print("UPDATING TURN")
             assert len(self.rooms) == 1
