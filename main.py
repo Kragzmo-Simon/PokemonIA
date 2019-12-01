@@ -49,7 +49,7 @@ class ChallengeClient(showdown.Client):
                         if self.battle_current_turn == current_battle.current_turn:
                             self.battle_current_turn += 1
 
-                            await room_obj.make_decicion()
+                            await room_obj.make_decision()
 
                             #if self.battle_current_turn >= 10:
                             #    battle_continue = False

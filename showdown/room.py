@@ -7,6 +7,7 @@ from collections import deque
 from . import utils, user
 import random
 import re
+import asyncio
 from .teams import *
 
 class Room:
@@ -292,18 +293,13 @@ class Battle(Room):
                     new_pokemon.update_moves(active_pokemon_moves)
                 self.own_team.add_pokemon(new_pokemon)
         
-            # TODO METTRE UN COUNT DES ATTAQUES / MOVES A RECUP POUR SLEEP LE BOT LE TEMPS DE LES RECUP
 
-            real_collection_moves_names = []
-            for move in self.moves_collection:
-                real_collection_moves_names.append(move.get_name())
-
-            print("collection moves : ", len(self.moves_name_collection))
-            print(self.moves_name_collection)
-            print("collection moves real: ", len(self.moves_collection))
-            print(real_collection_moves_names)
-            print("collection pokemons : ", len(self.pokemon_names_collection))
-            print("collection pokemons real : ", len(self.pokemon_collection))
+            # Update the team with the moves and pokemon stored in collections
+            for already_known_move in self.moves_collection:
+                self.own_team.update_moves_with_smogon(already_known_move)
+            for already_known_pokemon in self.pokemon_collection:
+                self.own_team.update_pokemons_with_smogon(already_known_pokemon)
+            
 
             # Send smogon the commands to retrieve the moves and pokemons data
             for pokemon in pokemons_to_ask_smogon:
@@ -312,6 +308,20 @@ class Battle(Room):
             for move in moves_to_ask_smogon:
                 await self.get_M_or_P_data(move)
                 self.moves_name_collection.append(move)
+
+            # these moves are the ones we already data from smogon
+            # (here, the real ones are supposed to be more or less empty
+            # but the names ones should be full)
+            """
+            #Code to debug moveset, is currently useless 
+            real_collection_moves_names = []
+            for move in self.moves_collection:
+                real_collection_moves_names.append(move.get_name())
+            print("collection moves : ", len(self.moves_name_collection))
+            print("collection moves real: ", len(self.moves_collection))
+            print("collection pokemons : ", len(self.pokemon_names_collection))
+            print("collection pokemons real : ", len(self.pokemon_collection))
+            """
 
             """
             # Maxmoves
@@ -395,7 +405,7 @@ class Battle(Room):
     def update_smogon_data_move(self, socket_input):
         # move name
         move_link = re.findall(r"<a.*href.*?</a>", socket_input)
-        move_name = re.findall(r">.*?<", move_link[-1])[0].replace(">","").replace("<","").replace(" ","").strip().lower()
+        move_name = re.findall(r">.*?<", move_link[-1])[0].replace(">","").replace("<","").replace(" ","").replace("-","").strip().lower()
 
         # type and phys/spe
         attributes = re.findall(r"alt=\\\".*?\\\"", socket_input)
@@ -419,7 +429,11 @@ class Battle(Room):
         new_move = Move(move_name)
         new_move.update_smogon_data(move_type, move_category, move_power, move_accuracy, move_description)
 
-        if new_move not in self.moves_collection:
+        moves_collection_names = []
+        for collection_move in self.moves_collection:
+            moves_collection_names.append(collection_move.get_name())
+
+        if new_move.get_name() not in moves_collection_names:
             self.moves_collection.append(new_move)
 
         # check if a pokemon in the team has the move in which case, the move is updated
@@ -557,11 +571,59 @@ class Battle(Room):
             delay=delay, lifespan=lifespan)
 
     @utils.require_client
-    async def make_decicion(self, client=None,
+    async def make_decision(self, client=None,
         delay=0, lifespan=math.inf):
         """
         Selects a random move among the moves that can be executed.
         """
+
+        # size tracking variables that helps resending the data if some has not been updated
+        old_moves_name_collection_size = -1
+        old_moves_collection_size = -1
+
+        # Wait for the data to be updated
+        smogon_data_has_not_been_updated = True
+        while smogon_data_has_not_been_updated:
+
+            current_moves_name_collection_size = len(self.moves_name_collection)
+            current_moves_collection_size = len(self.moves_collection)
+            # resend data command
+            if current_moves_name_collection_size != current_moves_collection_size:
+                if old_moves_name_collection_size == current_moves_name_collection_size:
+                    if old_moves_collection_size == current_moves_collection_size:
+                        print("RESENDING DATA : ", 
+                                current_moves_collection_size, " / ",
+                                current_moves_name_collection_size)
+                        # get the missing moves names
+                        current_moves_real_collection_names = []
+                        for collection_move in self.moves_collection:
+                            current_moves_real_collection_names.append(collection_move.get_name())
+
+                        # resend the command data to smogon
+                        for move_name in self.moves_name_collection:
+                            if move_name not in current_moves_real_collection_names:
+                                print("Resending : ", move_name)
+                                await self.get_M_or_P_data(move_name)
+
+                old_moves_name_collection_size = current_moves_name_collection_size
+                old_moves_collection_size = current_moves_collection_size
+
+            # check if the data has been updated
+            if  current_moves_collection_size == current_moves_name_collection_size:
+
+                # smogon_data_has_not_been_updated becomes false once all the data has been correctly updated in all pokemons
+                smogon_update, data_commands_names_to_resend = self.own_team.check_smogon_data_update()
+                smogon_data_has_not_been_updated = not smogon_update
+
+                # resend data commands if need be
+                if smogon_data_has_not_been_updated:
+                    for data_command_name in data_commands_names_to_resend:
+                        print("Resending 2 : ", data_command_name)
+                        await self.get_M_or_P_data(data_command_name)
+
+                print("Checking smogon data update...................... : ", smogon_data_has_not_been_updated)
+            await asyncio.sleep(2)
+
         print("Making a decision...")
 
         #self.own_team.print_active_pokemon()

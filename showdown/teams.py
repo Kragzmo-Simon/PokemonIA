@@ -32,6 +32,22 @@ class Team:
             if pokemon is not None and pokemon.is_active():
                 return pokemon.get_possible_moves()
 
+    def check_smogon_data_update(self):
+        # checks if all the smogon data has been updated on pokemons and moves
+        # returns False if data has not been updated and True if it has been updated
+        for pokemon in self.pokemons:
+            if pokemon is not None:
+                #print("Checking : ", pokemon.get_name())
+                smogon_update, moves_or_pok_to_resend = pokemon.has_been_updated_with_smogon()
+                if not smogon_update:
+                    return False, moves_or_pok_to_resend
+                print("Pokemon correctly updated : ", pokemon.get_name())
+            else:
+                print("A pokemon is NONE")
+                return False, []
+        print("Everything has been updated\n\n")
+        return True, []
+
     def update_moves_with_smogon(self, smogon_move):
         for pokemon in self.pokemons:
             pokemon.update_move_data_with_smogon(smogon_move)
@@ -198,6 +214,50 @@ class Pokemon:
     def get_base_speed(self):
         return self.base_speed
 
+    def get_move(self, move_name):
+        for move in self.complete_moves:
+            if move.has_name(move_name):
+                return move
+        return None
+
+    def has_been_updated_with_smogon(self):
+        # check that the pokemon moves have been loaded
+        if len(self.complete_moves) != len(self.moves_names):
+            print("Moveset not yet fully loaded (", self.name,")")
+
+            # get the moves that have not been updated correctly to send the data commands
+            self.self_print()
+
+            # moves the current pokemon actually knows
+            known_moves = []
+            for move in self.complete_moves:
+                known_moves.append(move.get_name())
+
+            # compare with the moves the pokemon is supposed to know
+            moves_names_to_resend = []
+            for move_name in self.moves_names:
+                if move_name not in known_moves:
+                    print("\nMove ", move_name, " not known")
+                    print("known moves : ", known_moves)
+                    print("supposedly known moves : ", self.moves_names, "\n")
+                    moves_names_to_resend.append(move_name)
+            return False, moves_names_to_resend
+
+        # check if each one of the moves has not been updated
+        for move in self.complete_moves:
+            #print("Checking ", move.get_name())
+            if not move.has_been_updated_with_smogon():
+                print("Move has not been updated : ", move.get_name())
+                return False, [move.get_name()]
+            #else:
+            #    print("Move correctly updated : ", move.get_name())
+        
+        # check if the pokemon has been updated
+        if not self.smogon_data_has_been_retrieved:
+            print("Pokemon has not been updated : ", self.name)
+            return False, [self.name]
+        return True, []
+
     def get_possible_moves(self):
         # moves that are not disabled and that still have remaining pp
         possible_moves = []
@@ -218,14 +278,19 @@ class Pokemon:
                 # if the pokemon is active, its moves should already be defined and should be
                 # updated. if the pokemon is not active, its moves are not defined and should
                 # be created
-                if len(self.complete_moves) >= (index+1):
-                    pok_move = self.complete_moves[index]
-                    pok_move.update_smogon_data(smogon_move_type, 
-                                                smogon_move_category, 
-                                                smogon_move_power, 
-                                                smogon_move_accuracy, 
-                                                smogon_move_description)
+                if self.active:
+                    # if the pokemon is active, its moves are already instanciated
+                    pok_move = self.get_move(move_name)
+                    if pok_move is not None:
+                        pok_move.update_smogon_data(smogon_move_type, 
+                                                    smogon_move_category, 
+                                                    smogon_move_power, 
+                                                    smogon_move_accuracy, 
+                                                    smogon_move_description)
+                    else:
+                        print("ERREUR MOVE NONE : ", move_name)
                 else:
+                    # if the pokemon is not active
                     new_move = Move(move_name)
                     new_move.update_smogon_data(smogon_move_type, 
                                                 smogon_move_category, 
@@ -325,6 +390,9 @@ class Move:
 
     def get_description(self):
         return  self.description
+
+    def has_been_updated_with_smogon(self):
+        return self.smogon_data_has_been_retrieved
 
     def self_print(self):
         print("\n", self.name, " (id : ", self.smogon_id, ", target : ", self.target, ", disabled : ", self.disabled,")")
