@@ -13,12 +13,8 @@ gigamax
 knock off
 
 - Erreures importantes à traiter
-Y A UNE ERREUR DANS LE PARSING LORSQU'UN POKEMON MEURT (ADVERSE)
-Erreur sur outrage
-erreur de parsing sur uturn
 erreur sur debut (mandibuzz vs swoobat)
-
-=> mettre un truc pour check si les moves sont None dans le cas du pokemon actif (forceSwitch)
+Mr. Mime
 
 - traitements futurs
 parsing des tours => buffs (on peut creer une classe separee réinitialisée à chaque switch)

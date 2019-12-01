@@ -250,11 +250,22 @@ class Battle(Room):
                 #new_move.self_print()
                 active_pokemon_moves.append(new_move)
 
+            # player name
+            player_name = "p3"
+            player_information = re.findall(r"name.*?\,.*?\,.*?pokemon", socket_input)
+            if len(player_information) == 1:
+                player_attributes = re.split(r",",player_information[0])
+                if len(player_attributes) >= 2:
+                    player_name = re.split(r":", player_attributes[1])[1].replace("\\\"","").strip()
+                    
+            if player_name == "p3":
+                print("Erreur lors de la lecture du player : ", socket_input)
+
             # Team construction
             side = re.findall(r"name.*pokemon.*\[.*}\]", socket_input)[0]
             pokemons = re.findall(r"{.*?}.*?}", side)
 
-            self.own_team = Team("p2")
+            self.own_team = Team(player_name)
 
             # arrays containing the moves and the pokemons names that have to be asked to smogon
             moves_to_ask_smogon = []

@@ -13,8 +13,9 @@ class Team:
         self.pokemon_index_to_add = 0
 
     def add_pokemon(self, pokemon):
-        self.pokemons[self.pokemon_index_to_add] = pokemon
-        self.pokemon_index_to_add += 1
+        if self.pokemon_index_to_add < 6:
+            self.pokemons[self.pokemon_index_to_add] = pokemon
+            self.pokemon_index_to_add += 1
 
     def self_print(self):
         for pokemon in self.pokemons:
