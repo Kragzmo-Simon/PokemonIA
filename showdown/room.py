@@ -294,8 +294,16 @@ class Battle(Room):
         
             # TODO METTRE UN COUNT DES ATTAQUES / MOVES A RECUP POUR SLEEP LE BOT LE TEMPS DE LES RECUP
 
-            #print("collection moves : ", len(self.moves_name_collection))
-            #print("collection pokemons : ", len(self.pokemon_names_collection))
+            real_collection_moves_names = []
+            for move in self.moves_collection:
+                real_collection_moves_names.append(move.get_name())
+
+            print("collection moves : ", len(self.moves_name_collection))
+            print(self.moves_name_collection)
+            print("collection moves real: ", len(self.moves_collection))
+            print(real_collection_moves_names)
+            print("collection pokemons : ", len(self.pokemon_names_collection))
+            print("collection pokemons real : ", len(self.pokemon_collection))
 
             # Send smogon the commands to retrieve the moves and pokemons data
             for pokemon in pokemons_to_ask_smogon:
@@ -347,6 +355,28 @@ class Battle(Room):
         pokemon_speD = re.findall(r">.*?<", pokemon_stats[4])[-1].replace(">","").replace("<","").replace(" ","").strip().lower()
         pokemon_spe = re.findall(r">.*?<", pokemon_stats[5])[-1].replace(">","").replace("<","").replace(" ","").strip().lower()
         
+        new_pokemon = Pokemon(pokemon_name,None,None,None,None,pokemon_hp,
+                                None,None,None,None,None,
+                                None,None,None,None,
+                                None,None,None, False)
+        
+        new_pokemon.update_smogon_data(pokemon_types_collection, 
+                                        pokemon_abilities_collection,
+                                        pokemon_hp,
+                                        pokemon_atk,
+                                        pokemon_def,
+                                        pokemon_speA,
+                                        pokemon_speD,
+                                        pokemon_spe)
+
+        if new_pokemon not in self.pokemon_collection:
+            self.pokemon_collection.append(new_pokemon)
+
+        # TODO update enemy pokemons
+
+        # update on allied pokemons
+        self.own_team.update_pokemons_with_smogon(new_pokemon)
+
         # Display
         """
         print("\nname : " ,pokemon_name)

@@ -7,7 +7,7 @@ pwd : idonfeelsogud45
 
 Remarques : 
 - Cas limites 
-dans le cas de uturn et voltswitch, il faut envoyer d'autres informations aussi
+dans le cas de uturn et voltswitch, parting shot, il faut envoyer d'autres informations aussi
 gerer les attaques comme fake out et first impression
 gigamax
 knock off
@@ -18,12 +18,14 @@ Erreur sur outrage
 erreur de parsing sur uturn
 erreur sur debut (mandibuzz vs swoobat)
 
+bug dans les collections de moves : des fois la collection reelle a un elem en moins de ce qu'il faut
+
 - traitements futurs
-/data attaque
-/data pokemon (jai meme pas les types mdr)
+/data attaque => done
+/data pokemon (jai meme pas les types mdr) => done
 parsing des tours => buffs (on peut creer une classe separee réinitialisée à chaque switch)
 		  => extrapolation adverse
-				=> /data pokemon
+Mise à jour des poks adverses
 METTRE UN TRUC POUR ATTENDRE que les attaques soient bien reçues avant d'attaquer (par ex, un has_been_updated dans pok et move)
 
 - TOUTE L'IA MDR

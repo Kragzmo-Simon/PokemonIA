@@ -36,6 +36,28 @@ class Team:
         for pokemon in self.pokemons:
             pokemon.update_move_data_with_smogon(smogon_move)
 
+    def update_pokemons_with_smogon(self, smogon_pokemon):
+        for pokemon in self.pokemons:
+            if smogon_pokemon.has_name(pokemon.get_name()):
+                #print("Updating this pokemon : ", pokemon.get_name())
+                types_collection = smogon_pokemon.get_types()
+                abilities_collection = smogon_pokemon.get_abilities_collection()
+                base_hp = smogon_pokemon.get_base_hp()
+                base_attack = smogon_pokemon.get_base_attack()
+                base_defense = smogon_pokemon.get_base_defense()
+                base_special_attack = smogon_pokemon.get_base_special_attack()
+                base_special_defense = smogon_pokemon.get_base_special_defense()
+                base_speed = smogon_pokemon.get_base_speed()
+ 
+                pokemon.update_smogon_data(types_collection, 
+                                        abilities_collection,
+                                        base_hp,
+                                        base_attack,
+                                        base_defense,
+                                        base_special_attack,
+                                        base_special_defense,
+                                        base_speed)
+
 class Pokemon:
 
     def __init__(self,  name,
@@ -61,7 +83,10 @@ class Pokemon:
         self.name = name
 
         # Id of smogon
-        self.smogon_id = smogon_id + 1
+        if smogon_id is not None:
+            self.smogon_id = smogon_id + 1
+        else:
+            self.smogon_id = None
 
         # Level
         self.level = level
@@ -78,12 +103,21 @@ class Pokemon:
         self.special_defense = special_defense
         self.speed = speed
 
+        # Base stats
+        self.base_hp = None
+        self.base_attack = None
+        self.base_defense = None
+        self.base_special_attack = None
+        self.base_special_defense = None
+        self.base_speed = None
+
         # item
         self.item = item
 
         # ability
         self.ability = ability
         self.base_ability = base_ability
+        self.abilities_collection = []
 
         # moves
         self.moves_names = [move1,move2,move3,move4]
@@ -92,28 +126,77 @@ class Pokemon:
         # active if the pokemon that is currently fighting
         self.active = active
 
+        # type
+        self.types_collection = []
+
+        # boolean to check if the smogon data has been retrieved and used
+        self.smogon_data_has_been_retrieved = False
+
         # stats modifiers
         # self.crit_level = 0
         # condition and statuses
-
-        """
-        self.base_hp = 0
-        self.base_attack = 0
-        self.base_defense = 0
-        self.base_special_attack = 0
-        self.base_special_defense = 0
-        self.base_special_defense = 0
-        """
 
         # Status and condition
         #self.status = 0
         #self.condition = 0
 
+    def update_smogon_data(self, 
+                            types_collection, 
+                            abilities_collection,
+                            base_hp,
+                            base_attack,
+                            base_defense,
+                            base_special_attack,
+                            base_special_defense,
+                            base_speed):
+        self.types_collection = types_collection
+        self.abilities_collection = abilities_collection
+        self.base_hp = base_hp
+        self.base_attack = base_attack
+        self.base_defense = base_defense
+        self.base_special_attack = base_special_attack
+        self.base_special_defense = base_special_defense
+        self.base_speed = base_speed
+        self.smogon_data_has_been_retrieved = True
+
     def update_moves(self, moves):
         self.complete_moves = moves
 
+    def has_name(self, pokemon_name):
+        if self.name.lower() == pokemon_name.lower():
+            return True
+        else:
+            return False
+
     def is_active(self):
         return self.active
+
+    def get_name(self):
+        return self.name
+
+    def get_types(self):
+        return self.types_collection
+
+    def get_abilities_collection(self):
+        return self.abilities_collection
+
+    def get_base_hp(self):
+        return self.base_hp
+
+    def get_base_attack(self):
+        return self.base_attack
+        
+    def get_base_defense(self):
+        return self.base_defense
+
+    def get_base_special_attack(self):
+        return self.base_special_attack
+
+    def get_base_special_defense(self):
+        return self.base_special_defense
+
+    def get_base_speed(self):
+        return self.base_speed
 
     def get_possible_moves(self):
         # moves that are not disabled and that still have remaining pp
@@ -221,6 +304,9 @@ class Move:
             return True
         else:
             return False
+
+    def get_name(self):
+        return self.name
 
     def get_smogon_id(self):
         return self.smogon_id
