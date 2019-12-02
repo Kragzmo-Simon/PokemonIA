@@ -690,16 +690,16 @@ class Status(Enum):
 
 
 new_attack=Move('Flamethrower',None,None,False,10,None)
-new_attack.update_smogon_data('fire','Special','90','100','The target is scorched with an intense blast of fire. This may also leave the target with a burn. ')
+new_attack.update_smogon_data('fire','physical','90','100','The target is scorched with an intense blast of fire. This may also leave the target with a burn. ')
 print(Move.get_name(new_attack))
 new_attack2=Move('Earthquake',None,None,False,10,None)
-new_attack2.update_smogon_data('ground','Physical','100','100','Damage doubles if the target is using Dig. Z-Move Base Power: 180')
+new_attack2.update_smogon_data('ground','physical','100','100','Damage doubles if the target is using Dig. Z-Move Base Power: 180')
 print(Move.get_name(new_attack))
 new_attack3=Move('Dragon Claw',None,None,False,10,None)
-new_attack3.update_smogon_data('dragon','Physical','80','100','No additional effect. Z-Move Base Power: 160')
+new_attack3.update_smogon_data('dragon','physical','80','100','No additional effect. Z-Move Base Power: 160')
 print(Move.get_name(new_attack))
 new_attack4=Move('Flare Blitz',None,None,False,10,None)
-new_attack4.update_smogon_data('fire','Physical','120','100','Has a 10% chance to burn the target. If the target lost HP, the user takes recoil damage equal to 33% the HP lost by the target, rounded half up, but not less than 1 HP. Z-Move Base Power: 190')
+new_attack4.update_smogon_data('fire','physical','120','100','Has a 10% chance to burn the target. If the target lost HP, the user takes recoil damage equal to 33% the HP lost by the target, rounded half up, but not less than 1 HP. Z-Move Base Power: 190')
 print(Move.get_name(new_attack))
 
 new_pokemon=Pokemon('Charizard','6','100','male','360','360','293','280','348','295','328',new_attack,new_attack2,new_attack3,new_attack4,'Solar Power','Jolly','Charizardite X','active')
@@ -747,12 +747,14 @@ def type_multipplicator(attack,pokemon):
 #calcul les dégats de l'attaque faite par le pokémon 1 sur le pokémon 2
 def damage_calcul(pokemon1,pokemon2,attack):
     Att=0
-    Def=0
+    Def=1
     Stab=1
-    if (Move.get_category(attack) =='Special'):
+    Pui=0
+    damage=0
+    if (Move.get_category(attack) =='special'):
         Att=int(Pokemon.get_special_attack(pokemon1))
         Def=int(Pokemon.get_special_defense(pokemon2))
-    if (Move.get_category(attack) =='Physical'):
+    if (Move.get_category(attack) =='physical'):
         Att=int(Pokemon.get_attack(pokemon1))
         Def=int(Pokemon.get_defense(pokemon2))
     pokemon_type=Pokemon.get_types(pokemon1)
@@ -760,12 +762,13 @@ def damage_calcul(pokemon1,pokemon2,attack):
         if (type_pokemon==Move.get_move_type(attack)):
             Stab=1.5
     lvl=int(Pokemon.get_level(pokemon1))
-    Pui=int(Move.get_power(attack))
-    CM=randint(100,100)/100*Stab*type_multipplicator(attack,pokemon2)
-    print(CM)
-    damage=int(int((((lvl*0.4+2)*Att*Pui)/(Def*50))+2)*CM)
+    if (not(Move.get_category(attack)=='status')):
+        Pui=int(Move.get_power(attack))
+        CM=randint(100,100)/100*Stab*type_multipplicator(attack,pokemon2)
+        damage=int(int((((lvl*0.4+2)*Att*Pui)/(Def*50))+2)*CM)
     return damage
 
+damage_calcul(new_pokemon,new_pokemon2,new_attack)
 
 #fonction qui choisi quelle move du pokémon il est préférable de choisir pour l'attaque d'un pokemon 1 sur un pokemon 2
 def select_move(pokemon1,pokemon2,move1,move2,move3,move4):
@@ -834,9 +837,9 @@ def assert_opponent_pokemon_threat(pokemon1,pokemon2):
     max_damage=0
     for type_pokemon in pokemon_type:
         attackphy=Move(type_pokemon+'phy',None,None,False,10,None)
-        attackphy.update_smogon_data(type_pokemon,'Physical','100','100','stabed attack')
+        attackphy.update_smogon_data(type_pokemon,'physical','100','100','stabed attack')
         attackspe=Move(type_pokemon+'phy',None,None,False,10,None)
-        attackspe.update_smogon_data(type_pokemon,'Special','100','100','stabed attack')
+        attackspe.update_smogon_data(type_pokemon,'special','100','100','stabed attack')
         print(Move.get_move_type(attackspe))
         phy_damage=damage_calcul(pokemon2,pokemon1,attackphy)
         spe_damage=damage_calcul(pokemon2,pokemon1,attackspe)
