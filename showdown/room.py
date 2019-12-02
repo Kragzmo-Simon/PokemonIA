@@ -213,42 +213,46 @@ class Battle(Room):
         try:
             # Active pokemon information
             active_pokemon_moves = re.findall(r"moves.*?side", socket_input)
+            active_pokemon_moves_to_add = []
 
-            """
-            # THIS SHOULD NOT HAPPEND HERE
+            # if the state is a forceswitch state
+            force_Switch_needed = False
             if len(active_pokemon_moves) == 0:
                 check_force_switch = re.findall(r"forceSwitch.*?side", socket_input)
-                print("FORCE SWITCH : \n", check_force_switch)
-            """
-            pokemon_is_trapped = re.findall(r"trapped.*?:.*?}", active_pokemon_moves[0])
-            if len(pokemon_is_trapped) != 0 and "trapped" in pokemon_is_trapped[0]:
-                print("He's trapped")
+                needs_a_force_switch = re.findall(r"\[.*?\]", check_force_switch[0])[0].replace("[","").replace("]","").strip()
+                force_Switch_needed = True
+                if needs_a_force_switch == "true":
+                    print("Force switch received")
+            else:
+                pokemon_is_trapped = re.findall(r"trapped.*?:.*?}", active_pokemon_moves[0])
+                if len(pokemon_is_trapped) != 0 and "trapped" in pokemon_is_trapped[0]:
+                    print("He's trapped")
+                    # TODO : make all other moves disabled
 
-            # dissociate normal moves info from maxmoves info
-            categories = re.findall(r"\[.*?\]", active_pokemon_moves[0])
+                # dissociate normal moves info from maxmoves info
+                categories = re.findall(r"\[.*?\]", active_pokemon_moves[0])
 
-            # Normal moves
-            normal_moves = re.findall(r"{.*?}", categories[0])
-            active_pokemon_moves = []
-            for smogon_id, normal_move in enumerate(normal_moves):
-                move_informations = normal_move.split(",")
+                # Normal moves
+                normal_moves = re.findall(r"{.*?}", categories[0])
+                for smogon_id, normal_move in enumerate(normal_moves):
+                    move_informations = normal_move.split(",")
 
-                name = move_informations[1].split(":")[-1].replace("\\\"","").replace("}","").strip() #
+                    name = move_informations[1].split(":")[-1].replace("\\\"","").replace("}","").strip() #
 
-                if len(move_informations) == 6:
-                    current_pp = move_informations[2].split(":")[-1].strip()
-                    max_pp = move_informations[3].split(":")[-1].strip()
-                    target = move_informations[4].split(":")[-1].replace("\\\"","").strip()
-                    disabled = True if move_informations[5].split(":")[-1].replace("}","").strip() == "true"  else False
-                else:
-                    current_pp = None
-                    max_pp = None
-                    target = None
-                    disabled = None
-                    
-                new_move = Move(name, smogon_id, target, disabled, current_pp, max_pp)
-                #new_move.self_print()
-                active_pokemon_moves.append(new_move)
+                    if len(move_informations) == 6:
+                        current_pp = move_informations[2].split(":")[-1].strip()
+                        max_pp = move_informations[3].split(":")[-1].strip()
+                        target = move_informations[4].split(":")[-1].replace("\\\"","").strip()
+                        disabled = True if move_informations[5].split(":")[-1].replace("}","").strip() == "true"  else False
+                    else:
+                        current_pp = None
+                        max_pp = None
+                        target = None
+                        disabled = None
+                        
+                    new_move = Move(name, smogon_id, target, disabled, current_pp, max_pp)
+                    #new_move.self_print()
+                    active_pokemon_moves_to_add.append(new_move)
 
             # player name
             player_name = "p3"
@@ -279,10 +283,18 @@ class Battle(Room):
                 pokemon_general_stats = re.findall(r"stats.*?}", pokemon)[0].split(r",")
                 pokemon_moveset = re.findall(r"\[.*?\]", pokemon)[0].split(r",")
 
-                name = re.findall(r"details.*?,", pokemon)[0].split(r":")[1].replace("\\\"","").replace(",","").strip()
+                name = re.findall(r"details.*?,", pokemon)[0].split(r":")[1].replace("\\\"","").replace(",","").replace(".","").replace(" ","").strip()
                 level = stats[2].replace("\\\"","").replace("L","").strip()
-                current_hp = hp_stats[0]
-                max_hp = hp_stats[1]
+                if len(hp_stats) == 2:
+                    current_hp = hp_stats[0]
+                    max_hp = hp_stats[1]
+                elif hp_stats[0] == "0 fnt":
+                    current_hp = 0
+                    max_hp = 0
+                else:
+                    # This should never happen
+                    current_hp = None
+                    max_hp = None
                 active = True if activity == "true" else False
                 attack = pokemon_general_stats[0].split(r":")[-1].strip()
                 defense = pokemon_general_stats[1].split(r":")[-1].strip()
@@ -303,7 +315,7 @@ class Battle(Room):
                 move4 = pokemon_full_moveset[3]
 
                 # For Debug concerns
-                if name == "Null" or name == "null":
+                if name == "Null" or name == "null" or name == "Type" or name == "type":
                     print("Pokemon Null : ", socket_input)
                     name = "type:null"
 
@@ -330,7 +342,7 @@ class Battle(Room):
                     pokemons_to_ask_smogon.append(name)
 
                 if active:
-                    new_pokemon.update_moves(active_pokemon_moves)
+                    new_pokemon.update_moves(active_pokemon_moves_to_add)
                 self.own_team.add_pokemon(new_pokemon)
         
 
@@ -348,6 +360,10 @@ class Battle(Room):
             for move in moves_to_ask_smogon:
                 await self.get_M_or_P_data(move)
                 self.moves_name_collection.append(move)
+
+            # Send a switch if forceswitch was received
+            if force_Switch_needed:
+                await self.make_switch()
 
             # these moves are the ones we already data from smogon
             # (here, the real ones are supposed to be more or less empty
@@ -682,6 +698,22 @@ class Battle(Room):
             await self.move(move_id,1)
         else:
             switch_id = random.randint(2,6)
+            await self.switch(switch_id,1)
+
+    @utils.require_client
+    async def make_switch(self, client=None,
+        delay=0, lifespan=math.inf):
+        """
+        Sends a command that performs a random switch.
+        """
+        possible_switchs = self.own_team.get_possible_pokemon_switch()
+
+        if len(possible_switchs) == 0:
+            print("Erreur : aucun switch possible")
+        else:
+            randomly_generated_switch_id = random.randint(0,len(possible_switchs)-1)
+            switch_id = possible_switchs[randomly_generated_switch_id]
+
             await self.switch(switch_id,1)
 
     @utils.require_client

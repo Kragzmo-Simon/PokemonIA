@@ -13,8 +13,8 @@ gigamax
 knock off
 
 - Erreures importantes à traiter
-erreur sur debut (mandibuzz vs swoobat)
-Mr. Mime
+attaques qui foirent : kingsshield (dans le chargement des attaques)
+			throat chop (ensemble de moves dispos)
 
 - traitements futurs
 parsing des tours => buffs (on peut creer une classe separee réinitialisée à chaque switch)

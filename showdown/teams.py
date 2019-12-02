@@ -27,6 +27,13 @@ class Team:
             if pokemon.is_active():
                 pokemon.self_print()
 
+    def get_possible_pokemon_switch(self):
+        possible_switch_names = []
+        for pokemon in self.pokemons:
+            if (pokemon.get_current_hp() != 0) and (not pokemon.is_active()):
+                possible_switch_names.append(pokemon.get_name())
+        return possible_switch_names
+
     def get_active_pokemon_possible_moves(self):
         for pokemon in self.pokemons:
             #pokemon.self_print()
@@ -191,6 +198,9 @@ class Pokemon:
     def get_name(self):
         return self.name
 
+    def get_current_hp(self):
+        return self.current_hp
+
     def get_types(self):
         return self.types_collection
 
@@ -279,6 +289,7 @@ class Pokemon:
                 # if the pokemon is active, its moves should already be defined and should be
                 # updated. if the pokemon is not active, its moves are not defined and should
                 # be created
+                pok_is_using_trapping_move = False
                 if self.active:
                     # if the pokemon is active, its moves are already instanciated
                     pok_move = self.get_move(move_name)
@@ -289,8 +300,11 @@ class Pokemon:
                                                     smogon_move_accuracy, 
                                                     smogon_move_description)
                     else:
+                        # pokemon active just fainted
+                        # or is using outrage (other moves have not been loaded)
                         print("ERREUR MOVE NONE : ", move_name)
-                else:
+                        pok_is_using_trapping_move = True
+                if (not self.active) or pok_is_using_trapping_move:
                     # if the pokemon is not active
                     new_move = Move(move_name)
                     new_move.update_smogon_data(smogon_move_type, 
