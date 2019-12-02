@@ -15,16 +15,47 @@ class Team:
     """
     def __init__(self, player):
         self.player = player # either p1 or p2
-        self.pokemons = [None] * 6
+        #self.pokemons = [None] * 6
+        self.pokemons = []
+        self.buffs = Side_Buffs()
 
         # This index tracks the next index of self.pokemons that should be added
         # If it is equal to 6, then the team is full
-        self.pokemon_index_to_add = 0
+        #self.pokemon_index_to_add = 0
+
+    def raise_stat(self, stat_name, levels):
+        print("Applying Buff : ", stat_name, " +", levels," (", self.player, ")")
+        self.buffs.raise_stat(stat_name, levels)
+
+    def lower_stat(self, stat_name, levels):
+        print("Applying Debuff : ", stat_name, " -", levels," (", self.player, ")")
+        self.buffs.lower_stat(stat_name, levels)
+
+    def reset_buffs(self):
+        self.buffs.reset()
+
+    def set_all_pokemons_to_inactive(self):
+        for pokemon in self.pokemons:
+            pokemon.make_inactive()
+
+    def make_pokemon_active(self, pokemon_name):
+        for pokemon in self.pokemons:
+            if pokemon.has_name(pokemon_name):
+                pokemon.make_active()
+
+    def get_pokemon(self, pokemon_name):
+        for pokemon in self.pokemons:
+            if pokemon.has_name(pokemon_name):
+                return pokemon
 
     def add_pokemon(self, pokemon):
+        if len(self.pokemons) <= 5:
+            self.pokemons.append(pokemon)
+        """
         if self.pokemon_index_to_add < 6:
             self.pokemons[self.pokemon_index_to_add] = pokemon
             self.pokemon_index_to_add += 1
+        """
 
     def self_print(self):
         for pokemon in self.pokemons:
@@ -36,9 +67,24 @@ class Team:
             if pokemon.is_active():
                 pokemon.self_print()
 
+    def get_player(self):
+        return self.player
+
+    def get_pokemon_names(self):
+        pokemon_names = []
+        for pokemon in self.pokemons:
+            pokemon_names.append(pokemon.get_name())
+        return pokemon_names
+
+    def get_possible_pokemon_switch(self):
+        possible_switch_names = []
+        for pokemon in self.pokemons:
+            if (pokemon.get_current_hp() != 0) and (not pokemon.is_active()):
+                possible_switch_names.append(pokemon.get_name())
+        return possible_switch_names
+
     def get_active_pokemon_possible_moves(self):
         for pokemon in self.pokemons:
-            #pokemon.self_print()
             if pokemon is not None and pokemon.is_active():
                 return pokemon.get_possible_moves()
 
@@ -194,6 +240,14 @@ class Pokemon:
         else:
             return False
 
+    def make_active(self):
+        print("Pokemon ", self.name, " is now active")
+        self.active = True
+
+    def make_inactive(self):
+        print("Pokemon ", self.name, " is now inactive")
+        self.active = False
+
     def is_active(self):
         return self.active
 
@@ -208,6 +262,12 @@ class Pokemon:
 
     def get_base_hp(self):
         return self.base_hp
+    
+    def get_max_hp(self):
+        return self.max_hp
+    
+    def set_max_hp(self,new_max_hp):
+        self.max_hp=str(new_max_hp)
 
     def get_base_attack(self):
         return self.base_attack
@@ -239,25 +299,41 @@ class Pokemon:
     def get_attack(self):
         return self.attack
     
+    def set_attack(self,new_attack):
+        self.attack=new_attack
+    
     def get_defense(self):
         return self.defense
+    
+    def set_defense(self,new_defense):
+        self.defense=new_defense
 
     def get_special_attack(self):
         return self.special_attack
         
+    def set_special_attack(self,new_special_attack):
+        self.special_attack=new_special_attack
+        
     def get_special_defense(self):
         return self.special_defense
+    
+    def set_special_defense(self,new_special_defense):
+        self.special_defense=new_special_defense
     
     def get_speed(self):
         return self.speed
     
+    def set_special_speed(self,new_special_speed):
+        self.speed=new_special_speed
+    
+
     def has_been_updated_with_smogon(self):
         # check that the pokemon moves have been loaded
         if len(self.complete_moves) != len(self.moves_names):
             print("Moveset not yet fully loaded (", self.name,")")
 
             # get the moves that have not been updated correctly to send the data commands
-            self.self_print()
+            #self.self_print()
 
             # moves the current pokemon actually knows
             known_moves = []
@@ -277,7 +353,7 @@ class Pokemon:
         # check if each one of the moves has not been updated
         for move in self.complete_moves:
             #print("Checking ", move.get_name())
-            if not move.has_been_updated_with_smogon():
+            if move is not None and not move.has_been_updated_with_smogon():
                 print("Move has not been updated : ", move.get_name())
                 return False, [move.get_name()]
             #else:
@@ -285,7 +361,7 @@ class Pokemon:
         
         # check if the pokemon has been updated
         if not self.smogon_data_has_been_retrieved:
-            print("Pokemon has not been updated : ", self.name)
+            #print("Pokemon has not been updated : ", self.name)
             return False, [self.name]
         return True, []
 
@@ -309,6 +385,7 @@ class Pokemon:
                 # if the pokemon is active, its moves should already be defined and should be
                 # updated. if the pokemon is not active, its moves are not defined and should
                 # be created
+                pok_is_using_trapping_move = False
                 if self.active:
                     # if the pokemon is active, its moves are already instanciated
                     pok_move = self.get_move(move_name)
@@ -319,8 +396,11 @@ class Pokemon:
                                                     smogon_move_accuracy, 
                                                     smogon_move_description)
                     else:
+                        # pokemon active just fainted
+                        # or is using outrage (other moves have not been loaded)
                         print("ERREUR MOVE NONE : ", move_name)
-                else:
+                        pok_is_using_trapping_move = True
+                if (not self.active) or pok_is_using_trapping_move:
                     # if the pokemon is not active
                     new_move = Move(move_name)
                     new_move.update_smogon_data(smogon_move_type, 
@@ -345,9 +425,167 @@ class Pokemon:
         print("    abilities - ", self.ability, "(originally ", self.base_ability, ")")
         print("    item - ", self.item)
 
+        if len(self.types_collection) == 2:
+            print("    types - ", self.types_collection[0], " / ", self.types_collection[1])
+        if len(self.types_collection) == 1:
+            print("    type - ", self.types_collection[0])
+        
+        abilities_string = ""
+        for ability in self.abilities_collection:
+            abilities_string += (ability + ", ")
+        print("    possible abilities : ", abilities_string)
+
         print("    moves details : ")
         for move in self.complete_moves:
-            move.self_print()
+            if move is not None:
+                move.self_print()
+
+class Move:
+
+    def __init__(self,  name,
+                        smogon_id = None,
+                        target = None,
+                        disabled = None,
+                        current_pp = None,
+                        max_pp = None):
+        self.name = name
+
+        # this id specifies the place of the pokemon in the team
+        self.smogon_id = smogon_id
+        
+        # the target specifies "self", "allAdjacentFoes" or "Normal"
+        self.target = target
+        self.disabled = disabled
+        self.current_pp = current_pp
+        self.max_pp = max_pp
+
+        # Information below will be updated when the data is retrieved from smogon
+        self.types = None
+        self.power = 9000
+        self.accuracy = 9000
+        self.description = None
+        self.category = None
+
+        # boolean to check if the smogon data has been retrieved and used
+        self.smogon_data_has_been_retrieved = False
+
+        # self.gigamax = mettre toutes les infos du maxmove directement dans le move plutot que
+        # de creer un second move
+
+    def update_smogon_data(self, move_type, category, power, accuracy, description):
+        self.types = move_type
+        self.power = power
+        self.accuracy = accuracy
+        self.description = description
+        self.category = category
+        self.smogon_data_has_been_retrieved = True
+
+    def is_castable(self):
+        if not self.disabled and int(self.current_pp) > 0:
+            return True
+        else:
+            return False
+
+    def has_name(self, move_name):
+        if self.name == move_name:
+            return True
+        else:
+            return False
+
+    def get_name(self):
+        return self.name
+
+    def get_smogon_id(self):
+        return self.smogon_id
+
+    def get_move_type(self):
+        return self.types
+
+    def get_category(self):
+        return self.category
+
+    def get_power(self):
+        return self.power
+
+    def get_accuracy(self):
+        return self.accuracy
+
+    def get_description(self):
+        return  self.description
+
+    def has_been_updated_with_smogon(self):
+        return self.smogon_data_has_been_retrieved
+
+    def self_print(self):
+        print("\n", self.name, " (id : ", self.smogon_id, ", target : ", self.target, ", disabled : ", self.disabled,")")
+        print("    pp : ", self.current_pp, "/", self.max_pp)
+        print("    types - ", self.types, " (", self.category,")")
+        print("    power - ", self.power," / accuracy - ", self.accuracy)
+
+class Side_Buffs:
+    def __init__(self):
+        self.attack = 0
+        self.defense = 0
+        self.special_attack = 0
+        self.special_defense = 0
+        self.speed = 0
+
+    def raise_stat(self, stat_name, levels):
+        if stat_name == "atk":
+            self.attack += int(levels)
+        if stat_name == "def":
+            self.defense += int(levels)
+        if stat_name == "spa":
+            self.special_attack += int(levels)
+        if stat_name == "spd":
+            self.special_defense += int(levels)
+        if stat_name == "spe":
+            self.speed += int(levels)
+
+    def lower_stat(self, stat_name, levels):
+        if stat_name == "atk":
+            self.attack -= int(levels)
+        if stat_name == "def":
+            self.defense -= int(levels)
+        if stat_name == "spa":
+            self.special_attack -= int(levels)
+        if stat_name == "spd":
+            self.special_defense -= int(levels)
+        if stat_name == "spe":
+            self.speed -= int(levels)
+
+    def reset(self):
+        self.attack = 0
+        self.defense = 0
+        self.special_attack = 0
+        self.special_defense = 0
+        self.speed = 0
+    
+    def self_print(self):
+        print("\natk : ", self.attack)
+        print("def : ", self.defense)
+        print("spa : ", self.special_attack)
+        print("spd : ", self.special_defense)
+        print("spe : ", self.speed, "\n")
+
+class Condition(Enum):
+    """
+    Special Status that has no display element in the game (such as love and confusion).
+    """
+    LOVE = 0
+    CONFUSION = 1
+
+class Status(Enum):
+    """
+    Status of the pokemon (appears in the game with a small rectangle beside the HP bar).
+    """
+    POISON = 0
+    STRONG_POISON = 1
+    SLEEP = 2
+    BURN = 3
+    PARALYSIS = 4
+    FREEZE = 5
+
 
 class Move:
 
@@ -451,24 +689,24 @@ class Status(Enum):
 
 
 
-new_attack=Move('Flamethrower')
+new_attack=Move('Flamethrower',None,None,False,10,None)
 new_attack.update_smogon_data('Fire','Special','90','100','The target is scorched with an intense blast of fire. This may also leave the target with a burn. ')
 print(Move.get_name(new_attack))
-new_attack2=Move('Earthquake')
+new_attack2=Move('Earthquake',None,None,False,10,None)
 new_attack2.update_smogon_data('Ground','Physical','100','100','Damage doubles if the target is using Dig. Z-Move Base Power: 180')
 print(Move.get_name(new_attack))
-new_attack3=Move('Dragon Claw')
+new_attack3=Move('Dragon Claw',None,None,False,10,None)
 new_attack3.update_smogon_data('Dragon','Physical','80','100','No additional effect. Z-Move Base Power: 160')
 print(Move.get_name(new_attack))
-new_attack4=Move('Flare Blitz')
+new_attack4=Move('Flare Blitz',None,None,False,10,None)
 new_attack4.update_smogon_data('Fire','Physical','120','100','Has a 10% chance to burn the target. If the target lost HP, the user takes recoil damage equal to 33% the HP lost by the target, rounded half up, but not less than 1 HP. Z-Move Base Power: 190')
 print(Move.get_name(new_attack))
 
-new_pokemon=Pokemon('Charizard','6','100','male','360','360','293','280','348','295','328','Flamethrower','Earthquake','Dragon Claw','Flare Blitz','Solar Power','Jolly','Charizardite X','active')
+new_pokemon=Pokemon('Charizard','6','100','male','360','360','293','280','348','295','328',new_attack,new_attack2,new_attack3,new_attack4,'Solar Power','Jolly','Charizardite X','active')
 new_pokemon.update_smogon_data(['Fire','FLying'],['Blaze','Solar Power'],'78','84','79','109','85','100')
+print(Move.is_castable(new_attack))
 
-
-new_pokemon2=Pokemon('Venusaur','3','100','male','364','364','263','265','299','299','259','ddd','aaa','bbb','ccc','Chlorophyll','Bold','Venusaurite','active')
+new_pokemon2=Pokemon('Venusaur','3','100','male','364','364','263','365','299','299','259','ddd','aaa','bbb','ccc','Chlorophyll','Bold','Venusaurite','active')
 new_pokemon2.update_smogon_data(['Grass','Poison'],['Chlorophyll','Overgrow'],'80','82','83','100','100','80')
 
 #retourne la table des types
@@ -530,25 +768,89 @@ def damage_calcul(pokemon1,pokemon2,attack):
 
 
 #fonction qui choisi quelle move du pokémon il est préférable de choisir pour l'attaque d'un pokemon 1 sur un pokemon 2
-def select_move(pokemon1,pokemon2):
-    moves=Pokemon.get_possibles_moves(pokemon1)
+def select_move(pokemon1,pokemon2,move1,move2,move3,move4):
+    moves=Pokemon.get_possible_moves(pokemon1)
     print("les moves sont")
     print(moves)
-    print("aaa")
     move_selected="aucune attaque n'est sélectionné"
     max_damage=0
-    for move in moves:
-        print(damage_calcul(pokemon1,pokemon2,move))
-        if(damage_calcul(pokemon1,pokemon2,move)>max_damage):
+    print(damage_calcul(pokemon1,pokemon2,move1))
+    if(damage_calcul(pokemon1,pokemon2,move1)>max_damage):
+        max_damage=damage_calcul(pokemon1,pokemon2,move1)
+        move_selected=move1.get_name()
+    if(damage_calcul(pokemon1,pokemon2,move2)>max_damage):
+        max_damage=damage_calcul(pokemon1,pokemon2,move2)
+        move_selected=move2.get_name()
+    if(damage_calcul(pokemon1,pokemon2,move3)>max_damage):
+        max_damage=damage_calcul(pokemon1,pokemon2,move3)
+        move_selected=move3.get_name()
+    if(damage_calcul(pokemon1,pokemon2,move4)>max_damage):
+        max_damage=damage_calcul(pokemon1,pokemon2,move4)
+        move_selected=move4.get_name()
+    return move_selected,max_damage
 
-            max_damage=damage_calcul(pokemon1,pokemon2,attack)
-            move_selected=move.get_name()
-    return move_selected
-
-select_move(new_pokemon,new_pokemon2)
+select_move(new_pokemon,new_pokemon2,new_attack,new_attack2,new_attack3,new_attack4)
 
 
+new_pokemon3=Pokemon('Venusaur','3',"82",'male','364','364','263','265','299','299','259','ddd','aaa','bbb','ccc','Chlorophyll','Bold','Venusaurite','active')
+new_pokemon3.update_smogon_data(['Grass','Poison'],['Chlorophyll','Overgrow'],'80','82','83','100','100','80')
+
+def set_stats_ennemi_pokemon(pokemon):
+    iv=31
+    hp=int(Pokemon.get_base_hp(pokemon))
+    attack=int(Pokemon.get_base_attack(pokemon))
+    defense=int(Pokemon.get_base_defense(pokemon))
+    special_attack=int(Pokemon.get_base_special_attack(pokemon))
+    special_defense=int(Pokemon.get_base_special_defense(pokemon))
+    spd=int(Pokemon.get_base_speed(pokemon))
+    lvl=int(Pokemon.get_level(pokemon))
+    new_hp=int(((2*hp+iv)*lvl)/100+lvl+10)+17
+    new_attack=int(((2*attack+iv)*lvl)/100+5)+17
+    new_defense=int(((2*defense+iv)*lvl)/100+5)+17
+    new_special_attack=int(((2*special_attack+iv)*lvl)/100+5)+17
+    new_special_defense=int(((2*special_defense+iv)*lvl)/100+5)+17
+    new_spd=int(((2*spd+iv)*lvl)/100+5)+17
+    pokemon.set_max_hp(new_hp)
+    pokemon.set_attack(str(new_attack))
+    pokemon.set_defense(str(new_defense))
+    pokemon.set_special_attack(str(new_special_attack))
+    pokemon.set_special_defense(str(new_special_defense))
+    pokemon.set_special_speed(str(new_spd))
+    
+
+#def calcul_ennemie_potentiel_damage(pokemon):
+    
+set_stats_ennemi_pokemon(new_pokemon3)
+print("les stats du pokémon sont")
+print(Pokemon.get_max_hp(new_pokemon3))
+print(Pokemon.get_attack(new_pokemon3))
+print(Pokemon.get_defense(new_pokemon3))
+print(Pokemon.get_special_attack(new_pokemon3))
+print(Pokemon.get_special_defense(new_pokemon3))
+print(Pokemon.get_speed(new_pokemon3))
+
+def assert_opponent_pokemon_threat(pokemon1,pokemon2):
+    pokemon_type=Pokemon.get_types(pokemon2)
+    max_damage=0
+    for type_pokemon in pokemon_type:
+        attackphy=Move(type_pokemon+'phy',None,None,False,10,None)
+        attackphy.update_smogon_data(type_pokemon,'Physical','100','100','stabed attack')
+        attackspe=Move(type_pokemon+'phy',None,None,False,10,None)
+        attackspe.update_smogon_data(type_pokemon,'Special','100','100','stabed attack')
+        print(Move.get_move_type(attack_spe))
+        phy_damage=damage_calcul(pokemon2,pokemon1,attackphy)
+        spe_damage=damage_calcul(pokemon2,pokemon1,attackspe)
+        if (max_damage>phy_damage):
+            max_damage=phy_damage
+        if (max_damage>spe_damage):
+            max_damage=spe_damage
+    return max_damage
+
+assert_opponent_pokemon_threat(new_pokemon2,new_pokemon)
+            
+            
 damage_calcul(new_pokemon,new_pokemon2,new_attack)
+
 
 
 
