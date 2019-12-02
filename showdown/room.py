@@ -283,7 +283,7 @@ class Battle(Room):
                 pokemon_general_stats = re.findall(r"stats.*?}", pokemon)[0].split(r",")
                 pokemon_moveset = re.findall(r"\[.*?\]", pokemon)[0].split(r",")
 
-                name = re.findall(r"details.*?,", pokemon)[0].split(r":")[1].replace("\\\"","").replace(",","").replace(".","").replace(" ","").strip()
+                name = re.findall(r"details.*?,", pokemon)[0].split(r":")[1].replace("\\\"","").replace(",","").replace(".","").replace(" ","").replace("'","").strip()
                 level = stats[2].replace("\\\"","").replace("L","").strip()
                 if len(hp_stats) == 2:
                     current_hp = hp_stats[0]
@@ -394,7 +394,7 @@ class Battle(Room):
     def update_smogon_data_pokemon(self, socket_input):
         # move name
         pokemon_link = re.findall(r"<a.*href.*?</a>", socket_input)
-        pokemon_name = re.findall(r">.*?<", pokemon_link[-1])[0].replace(">","").replace("<","").replace(" ","").strip().lower()
+        pokemon_name = re.findall(r">.*?<", pokemon_link[-1])[0].replace(">","").replace("<","").replace(" ","").replace(".","").replace("'","").strip().lower()
 
         # types
         pokemon_types_collection = []
@@ -439,6 +439,7 @@ class Battle(Room):
             self.pokemon_collection.append(new_pokemon)
 
         # TODO update enemy pokemons
+        self.opponent_team.update_pokemons_with_smogon(new_pokemon)
 
         # update on allied pokemons
         self.own_team.update_pokemons_with_smogon(new_pokemon)
@@ -505,6 +506,167 @@ class Battle(Room):
         print("accuracy : ", move_accuracy)
         print("description : ", move_description)
         """
+
+    async def update_turn(self, socket_input):
+        # create opponent team
+        if self.opponent_team is None:
+            if self.own_team is None:
+                print("IMPOSSIBLE DE CREER LA TEAM ADVERSE")
+            else:
+                if self.own_team.get_player() == "p2":
+                    opponent_player_name = "p1"
+                else:
+                    opponent_player_name = "p2"
+                self.opponent_team = Team(opponent_player_name)
+        
+        # turn parsing
+        damage_event_player, damage_event_pokemon, damage_event_current_hp, damage_event_max_hp = None,None,None,None
+        damage_event_type = "-"
+        boost_events_collection = []
+        unboost_events_collection = []
+        switch_events_collection = []
+        lines = socket_input.split("\\n")
+        for line in lines:
+            # damage events
+            damages_events = re.findall(r"-damage.*$",line)
+            for damage_event in damages_events:
+                damage_infos = damage_event.split("|")
+                damage_event_pokemon_and_player = damage_infos[1].split(r":")
+                damage_event_hp_bar = damage_infos[2].split("/")
+
+                damaged_pokemon_owner = damage_event_pokemon_and_player[0].replace("a","").strip()
+                if damaged_pokemon_owner == self.opponent_team.get_player():
+                    damage_event_player = damaged_pokemon_owner
+                    damage_event_pokemon = damage_event_pokemon_and_player[1].strip().lower()
+                    damage_event_current_hp = damage_event_hp_bar[0].replace("\\n","").replace("fnt","").strip()
+                    damage_event_max_hp = 100
+                    damage_event_type = "damage"
+        
+            # heal events
+            heals_events = re.findall(r"-heal.*$",line)
+            for heal_event in heals_events:
+                heal_infos = heal_event.split("|")
+                heal_event_pokemon_and_player = heal_infos[1].split(r":")
+                heal_event_hp_bar = heal_infos[2].split("/")
+
+                healed_pokemon_owner = heal_event_pokemon_and_player[0].replace("a","").strip()
+                if healed_pokemon_owner == self.opponent_team.get_player():
+                    damage_event_player = healed_pokemon_owner
+                    damage_event_pokemon = heal_event_pokemon_and_player[1].strip().lower()
+                    damage_event_current_hp = heal_event_hp_bar[0].replace("\\n","").replace("fnt","").strip()
+                    damage_event_max_hp = 100
+                    damage_event_type = "heal"
+
+            # boost events
+            boosts_events = re.findall(r"-boost.*$", line)
+            for boost_event in boosts_events:
+                boost_infos = boost_event.split("|")
+                boost_event_pokemon_and_player = boost_infos[1].split(r":")
+
+                boost_event_player = boost_event_pokemon_and_player[0].replace("a","").strip()
+                boost_event_pokemon = boost_event_pokemon_and_player[1].strip().lower()
+                boost_event_stat = boost_infos[2].strip().lower()
+                boost_event_level = boost_infos[3].replace("\\n","").strip()
+                
+                pokemon_boost = [boost_event_player,
+                                    boost_event_pokemon,
+                                    boost_event_stat,
+                                    boost_event_level]
+                boost_events_collection.append(pokemon_boost)
+
+            # unboost events
+            unboosts_events = re.findall(r"-unboost.*$", line)
+            for unboost_event in unboosts_events:
+                unboost_infos = unboost_event.split("|")
+                unboost_event_pokemon_and_player = unboost_infos[1].split(r":")
+
+                unboost_event_player = unboost_event_pokemon_and_player[0].replace("a","").strip()
+                unboost_event_pokemon = unboost_event_pokemon_and_player[1].strip().lower()
+                unboost_event_stat = unboost_infos[2].strip().lower()
+                unboost_event_level = unboost_infos[3].replace("\\n","").strip()
+
+                pokemon_unboost = [unboost_event_player,
+                                    unboost_event_pokemon,
+                                    unboost_event_stat,
+                                    unboost_event_level]
+                unboost_events_collection.append(pokemon_unboost)
+
+            switch_events = re.findall(r"switch.*$", line)
+            for switch_event in switch_events:
+                switch_infos = switch_event.split("|")
+                switch_event_pokemon_and_player = switch_infos[1].split(r":")
+
+                switch_event_player = switch_event_pokemon_and_player[0].replace("a","").strip()
+                switch_event_pokemon = switch_event_pokemon_and_player[1].strip().lower()
+                switch_event_pokemon_level = switch_infos[2].split(",")[1].replace("L","").strip()
+                switch_event_pokemon_current_hp = switch_infos[3].split("/")[0]
+                switch_event_pokemon_max_hp = 100
+
+                pokemon_switch = [switch_event_player,
+                                    switch_event_pokemon,
+                                    switch_event_pokemon_level,
+                                    switch_event_pokemon_current_hp,
+                                    switch_event_pokemon_max_hp]
+                switch_events_collection.append(pokemon_switch)
+
+                # remove boosts and unboosts of the current side
+                new_boost_collection = []
+                for boost in boost_events_collection:
+                    if boost[0] != switch_event_player:
+                        new_boost_collection.append(boost)
+                boost_events_collection = new_boost_collection
+
+                new_unboost_collection = []
+                for unboost in unboost_events_collection:
+                    if unboost[0] != switch_event_player:
+                        new_unboost_collection.append(boost)
+                unboost_events_collection = new_unboost_collection
+
+                if self.opponent_team.get_player() == switch_event_player:
+                    self.opponent_team.reset_buffs()
+                if self.own_team.get_player() == switch_event_player:
+                    self.own_team.reset_buffs()
+
+        # Résumé du tour
+        #print(damage_event_player, " / ", damage_event_pokemon, " => ", damage_event_current_hp, " / ", 
+        #            damage_event_max_hp, "(", damage_event_type,")")
+
+        for boost in boost_events_collection:
+            #print(boost[0], " / ", boost[1], " => ", boost[2], " +", boost[3])
+            if boost[0] == self.opponent_team.get_player():
+                self.opponent_team.raise_stat(boost[2],boost[3])
+            if boost[0] == self.own_team.get_player():
+                self.own_team.raise_stat(boost[2],boost[3])
+        for unboost in unboost_events_collection:
+            #print(unboost[0], " / ", unboost[1], " => ", unboost[2], " -", unboost[3])
+            if unboost[0] == self.opponent_team.get_player():
+                self.opponent_team.lower_stat(unboost[2],unboost[3])
+            if unboost[0] == self.own_team.get_player():
+                self.own_team.lower_stat(unboost[2],unboost[3])            
+        for switch in switch_events_collection:
+            #print("switch : ", switch[0], " - ", switch[1], " (", switch[2], ")", switch[3], " / ", switch[4])
+            if switch[0] == self.opponent_team.get_player():
+                pokemon_names = self.opponent_team.get_pokemon_names()
+
+                # create the opponent pokemon if needed and set it to be the only active pokemon
+                if switch[1] not in pokemon_names:
+                    self.opponent_team.set_all_pokemons_to_inactive()
+                    new_pokemon = Pokemon(switch[1],None,None,None,None,None,
+                                None,None,None,None,None,
+                                None,None,None,None,
+                                None,None,None, True)
+                    new_pokemon.update_moves([None,None,None,None])
+                    self.opponent_team.add_pokemon(new_pokemon)
+
+                    # send showdown data command
+                    await self.get_M_or_P_data(switch[1])
+                else:
+                    self.opponent_team.set_all_pokemons_to_inactive()
+                    self.opponent_team.make_pokemon_active(switch[1])
+
+                    current_pokemon = self.opponent_team.get_pokemon(switch[1])
+                    current_pokemon.self_print()
+
 
     def print_own_team(self):
         if self.own_team is not None:
@@ -647,6 +809,8 @@ class Battle(Room):
             if current_moves_name_collection_size != current_moves_collection_size:
                 if old_moves_name_collection_size == current_moves_name_collection_size:
                     if old_moves_collection_size == current_moves_collection_size:
+                        # This part checks all moves present in the collection and then sends data for
+                        # each move that should be in it but is not (move information has not been received)
                         print("RESENDING DATA : ", 
                                 current_moves_collection_size, " / ",
                                 current_moves_name_collection_size)
@@ -669,6 +833,8 @@ class Battle(Room):
 
                 # smogon_data_has_not_been_updated becomes false once all the data has been correctly updated in all pokemons
                 smogon_update, data_commands_names_to_resend = self.own_team.check_smogon_data_update()
+                smogon_update2, data_commands_names_to_resend2 = self.opponent_team.check_smogon_data_update()
+                # TODO mettre le check sur la team adverse
                 smogon_data_has_not_been_updated = not smogon_update
 
                 # resend data commands if need be
@@ -679,8 +845,6 @@ class Battle(Room):
 
                 #print("Checking smogon data update...................... : ", smogon_data_has_not_been_updated)
             await asyncio.sleep(2)
-
-        print("Making a decision...")
 
         #self.own_team.print_active_pokemon()
 

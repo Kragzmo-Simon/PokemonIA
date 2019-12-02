@@ -7,19 +7,15 @@ pwd : idonfeelsogud45
 
 Remarques : 
 - Cas limites 
-dans le cas de uturn et voltswitch, parting shot, il faut envoyer d'autres informations aussi
 gerer les attaques comme fake out et first impression
-gigamax
 knock off
 
 - Erreures importantes à traiter
-attaques qui foirent : kingsshield (dans le chargement des attaques)
 			throat chop (ensemble de moves dispos)
 
 - traitements futurs
-parsing des tours => buffs (on peut creer une classe separee réinitialisée à chaque switch)
 		  => extrapolation adverse
-Mise à jour des poks adverses
+	faire en sorte que make decision attende aussi l'update de enemy team
 
 - TOUTE L'IA MDR
 

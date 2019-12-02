@@ -6,16 +6,47 @@ class Team:
     """
     def __init__(self, player):
         self.player = player # either p1 or p2
-        self.pokemons = [None] * 6
+        #self.pokemons = [None] * 6
+        self.pokemons = []
+        self.buffs = Side_Buffs()
 
         # This index tracks the next index of self.pokemons that should be added
         # If it is equal to 6, then the team is full
-        self.pokemon_index_to_add = 0
+        #self.pokemon_index_to_add = 0
+
+    def raise_stat(self, stat_name, levels):
+        print("Applying Buff : ", stat_name, " +", levels," (", self.player, ")")
+        self.buffs.raise_stat(stat_name, levels)
+
+    def lower_stat(self, stat_name, levels):
+        print("Applying Debuff : ", stat_name, " -", levels," (", self.player, ")")
+        self.buffs.lower_stat(stat_name, levels)
+
+    def reset_buffs(self):
+        self.buffs.reset()
+
+    def set_all_pokemons_to_inactive(self):
+        for pokemon in self.pokemons:
+            pokemon.make_inactive()
+
+    def make_pokemon_active(self, pokemon_name):
+        for pokemon in self.pokemons:
+            if pokemon.has_name(pokemon_name):
+                pokemon.make_active()
+
+    def get_pokemon(self, pokemon_name):
+        for pokemon in self.pokemons:
+            if pokemon.has_name(pokemon_name):
+                return pokemon
 
     def add_pokemon(self, pokemon):
+        if len(self.pokemons) <= 5:
+            self.pokemons.append(pokemon)
+        """
         if self.pokemon_index_to_add < 6:
             self.pokemons[self.pokemon_index_to_add] = pokemon
             self.pokemon_index_to_add += 1
+        """
 
     def self_print(self):
         for pokemon in self.pokemons:
@@ -27,6 +58,15 @@ class Team:
             if pokemon.is_active():
                 pokemon.self_print()
 
+    def get_player(self):
+        return self.player
+
+    def get_pokemon_names(self):
+        pokemon_names = []
+        for pokemon in self.pokemons:
+            pokemon_names.append(pokemon.get_name())
+        return pokemon_names
+
     def get_possible_pokemon_switch(self):
         possible_switch_names = []
         for pokemon in self.pokemons:
@@ -36,7 +76,6 @@ class Team:
 
     def get_active_pokemon_possible_moves(self):
         for pokemon in self.pokemons:
-            #pokemon.self_print()
             if pokemon is not None and pokemon.is_active():
                 return pokemon.get_possible_moves()
 
@@ -192,6 +231,14 @@ class Pokemon:
         else:
             return False
 
+    def make_active(self):
+        print("Pokemon ", self.name, " is now active")
+        self.active = True
+
+    def make_inactive(self):
+        print("Pokemon ", self.name, " is now inactive")
+        self.active = False
+
     def is_active(self):
         return self.active
 
@@ -237,7 +284,7 @@ class Pokemon:
             print("Moveset not yet fully loaded (", self.name,")")
 
             # get the moves that have not been updated correctly to send the data commands
-            self.self_print()
+            #self.self_print()
 
             # moves the current pokemon actually knows
             known_moves = []
@@ -257,7 +304,7 @@ class Pokemon:
         # check if each one of the moves has not been updated
         for move in self.complete_moves:
             #print("Checking ", move.get_name())
-            if not move.has_been_updated_with_smogon():
+            if move is not None and not move.has_been_updated_with_smogon():
                 print("Move has not been updated : ", move.get_name())
                 return False, [move.get_name()]
             #else:
@@ -265,7 +312,7 @@ class Pokemon:
         
         # check if the pokemon has been updated
         if not self.smogon_data_has_been_retrieved:
-            print("Pokemon has not been updated : ", self.name)
+            #print("Pokemon has not been updated : ", self.name)
             return False, [self.name]
         return True, []
 
@@ -329,9 +376,20 @@ class Pokemon:
         print("    abilities - ", self.ability, "(originally ", self.base_ability, ")")
         print("    item - ", self.item)
 
+        if len(self.types_collection) == 2:
+            print("    types - ", self.types_collection[0], " / ", self.types_collection[1])
+        if len(self.types_collection) == 1:
+            print("    type - ", self.types_collection[0])
+        
+        abilities_string = ""
+        for ability in self.abilities_collection:
+            abilities_string += (ability + ", ")
+        print("    possible abilities : ", abilities_string)
+
         print("    moves details : ")
         for move in self.complete_moves:
-            move.self_print()
+            if move is not None:
+                move.self_print()
 
 class Move:
 
@@ -414,6 +472,52 @@ class Move:
         print("    pp : ", self.current_pp, "/", self.max_pp)
         print("    types - ", self.types, " (", self.category,")")
         print("    power - ", self.power," / accuracy - ", self.accuracy)
+
+class Side_Buffs:
+    def __init__(self):
+        self.attack = 0
+        self.defense = 0
+        self.special_attack = 0
+        self.special_defense = 0
+        self.speed = 0
+
+    def raise_stat(self, stat_name, levels):
+        if stat_name == "atk":
+            self.attack += int(levels)
+        if stat_name == "def":
+            self.defense += int(levels)
+        if stat_name == "spa":
+            self.special_attack += int(levels)
+        if stat_name == "spd":
+            self.special_defense += int(levels)
+        if stat_name == "spe":
+            self.speed += int(levels)
+
+    def lower_stat(self, stat_name, levels):
+        if stat_name == "atk":
+            self.attack -= int(levels)
+        if stat_name == "def":
+            self.defense -= int(levels)
+        if stat_name == "spa":
+            self.special_attack -= int(levels)
+        if stat_name == "spd":
+            self.special_defense -= int(levels)
+        if stat_name == "spe":
+            self.speed -= int(levels)
+
+    def reset(self):
+        self.attack = 0
+        self.defense = 0
+        self.special_attack = 0
+        self.special_defense = 0
+        self.speed = 0
+    
+    def self_print(self):
+        print("\natk : ", self.attack)
+        print("def : ", self.defense)
+        print("spa : ", self.special_attack)
+        print("spd : ", self.special_defense)
+        print("spe : ", self.speed, "\n")
 
 class Condition(Enum):
     """

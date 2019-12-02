@@ -291,7 +291,7 @@ class Client(user.User):
         socket_input = await self.websocket.recv()
         logger.debug('<<< Received:\n{}'.format(socket_input))
 
-        print(socket_input)
+        #print(socket_input)
 
         if "error" in socket_input:
             print("\nErreur ici : ", socket_input)
@@ -312,6 +312,7 @@ class Client(user.User):
             for key in self.rooms:
                 current_battle = self.rooms.get(key)
                 current_battle.add_turn()
+                await current_battle.update_turn(socket_input)
                 #current_battle.print_own_team()
             print("UPDATE OF TURN DONE")
 
