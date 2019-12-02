@@ -854,7 +854,7 @@ class Battle(Room):
         #    print("dat id : ", move.get_smogon_id())
 
         # 1/4 chance of switching (switch_or_move=0) and 3/4 chance of moving (switch_or_move=1,2 or 3)
-        switch_or_move = random.randint(1,4)
+        switch_or_move = random.randint(0,4)
         if switch_or_move and len(possible_moves) > 0:
             # will be used more effectively than just a randomint when the intelligent logic will be called
             randomly_generated_move_id = random.randint(1,len(possible_moves))
