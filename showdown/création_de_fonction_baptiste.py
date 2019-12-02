@@ -690,24 +690,24 @@ class Status(Enum):
 
 
 new_attack=Move('Flamethrower',None,None,False,10,None)
-new_attack.update_smogon_data('Fire','Special','90','100','The target is scorched with an intense blast of fire. This may also leave the target with a burn. ')
+new_attack.update_smogon_data('fire','Special','90','100','The target is scorched with an intense blast of fire. This may also leave the target with a burn. ')
 print(Move.get_name(new_attack))
 new_attack2=Move('Earthquake',None,None,False,10,None)
-new_attack2.update_smogon_data('Ground','Physical','100','100','Damage doubles if the target is using Dig. Z-Move Base Power: 180')
+new_attack2.update_smogon_data('ground','Physical','100','100','Damage doubles if the target is using Dig. Z-Move Base Power: 180')
 print(Move.get_name(new_attack))
 new_attack3=Move('Dragon Claw',None,None,False,10,None)
-new_attack3.update_smogon_data('Dragon','Physical','80','100','No additional effect. Z-Move Base Power: 160')
+new_attack3.update_smogon_data('dragon','Physical','80','100','No additional effect. Z-Move Base Power: 160')
 print(Move.get_name(new_attack))
 new_attack4=Move('Flare Blitz',None,None,False,10,None)
-new_attack4.update_smogon_data('Fire','Physical','120','100','Has a 10% chance to burn the target. If the target lost HP, the user takes recoil damage equal to 33% the HP lost by the target, rounded half up, but not less than 1 HP. Z-Move Base Power: 190')
+new_attack4.update_smogon_data('fire','Physical','120','100','Has a 10% chance to burn the target. If the target lost HP, the user takes recoil damage equal to 33% the HP lost by the target, rounded half up, but not less than 1 HP. Z-Move Base Power: 190')
 print(Move.get_name(new_attack))
 
 new_pokemon=Pokemon('Charizard','6','100','male','360','360','293','280','348','295','328',new_attack,new_attack2,new_attack3,new_attack4,'Solar Power','Jolly','Charizardite X','active')
-new_pokemon.update_smogon_data(['Fire','Flying'],['Blaze','Solar Power'],'78','84','79','109','85','100')
+new_pokemon.update_smogon_data(['fire','flying'],['Blaze','Solar Power'],'78','84','79','109','85','100')
 print(Move.is_castable(new_attack))
 
 new_pokemon2=Pokemon('Venusaur','3','100','male','364','364','263','365','299','299','259','ddd','aaa','bbb','ccc','Chlorophyll','Bold','Venusaurite','active')
-new_pokemon2.update_smogon_data(['Grass','Electric'],['Chlorophyll','Overgrow'],'80','82','83','100','100','80')
+new_pokemon2.update_smogon_data(['grass','electric'],['Chlorophyll','Overgrow'],'80','82','83','100','100','80')
 
 #retourne la table des types
 def type_table():
@@ -793,7 +793,7 @@ select_move(new_pokemon,new_pokemon2,new_attack,new_attack2,new_attack3,new_atta
 
 
 new_pokemon3=Pokemon('Venusaur','3',"82",'male','364','364','263','265','299','299','259','ddd','aaa','bbb','ccc','Chlorophyll','Bold','Venusaurite','active')
-new_pokemon3.update_smogon_data(['Grass','Poison'],['Chlorophyll','Overgrow'],'80','82','83','100','100','80')
+new_pokemon3.update_smogon_data(['grass','poison'],['Chlorophyll','Overgrow'],'80','82','83','100','100','80')
 
 def set_stats_ennemi_pokemon(pokemon):
     iv=31
