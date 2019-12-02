@@ -274,30 +274,38 @@ class Battle(Room):
             for smogon_id,pokemon in enumerate(pokemons):
                 stats = re.split(r",", pokemon)
 
-                hp_stats = stats[-15].split(r":")[-1].replace("\\\"","").strip().split(r"/")
-                activity = stats[-14].split(r":")[-1].strip()
+                hp_stats = re.findall(r"condition.*?,", pokemon)[0].split(r":")[-1].replace("\\\"","").replace(",","").strip().split(r"/")
+                activity = re.findall(r"active.*?,", pokemon)[0].split(r":")[-1].replace(",","").strip()
+                pokemon_general_stats = re.findall(r"stats.*?}", pokemon)[0].split(r",")
+                pokemon_moveset = re.findall(r"\[.*?\]", pokemon)[0].split(r",")
 
-                name = stats[1].split(r":")[-1].replace("\\\"","").strip()
+                name = re.findall(r"details.*?,", pokemon)[0].split(r":")[1].replace("\\\"","").replace(",","").strip()
                 level = stats[2].replace("\\\"","").replace("L","").strip()
                 current_hp = hp_stats[0]
                 max_hp = hp_stats[1]
                 active = True if activity == "true" else False
-                attack = stats[-13].split(r":")[-1].strip()
-                defense = stats[-12].split(r":")[-1].strip()
-                spAttack = stats[-11].split(r":")[-1].strip()
-                spDefense = stats[-10].split(r":")[-1].strip()
-                speed = stats[-9].split(r":")[-1].replace("}","").strip()
-                move1 = stats[-8].split(r":")[-1].replace("\\\"","").replace("[","").strip()
-                move2 = stats[-7].replace("\\\"","").strip()
-                move3 = stats[-6].replace("\\\"","").strip()
-                move4 = stats[-5].replace("\\\"","").replace("]","").strip()
-                ability = stats[-1].split(r":")[-1].replace("\\\"","").replace("}","").strip()
-                base_ability = stats[-4].split(r":")[-1].replace("\\\"","").replace("}","").strip()
-                item = stats[-3].split(r":")[-1].replace("\\\"","").replace("}","").strip()
+                attack = pokemon_general_stats[0].split(r":")[-1].strip()
+                defense = pokemon_general_stats[1].split(r":")[-1].strip()
+                spAttack = pokemon_general_stats[2].split(r":")[-1].strip()
+                spDefense = pokemon_general_stats[3].split(r":")[-1].strip()
+                speed = pokemon_general_stats[4].split(r":")[-1].replace("}","").strip()
+                ability = re.findall(r"ability.*?}", pokemon)[0].split(r":")[1].replace("\\\"","").replace("}","").strip()
+                base_ability = re.findall(r"baseAbility.*?,", pokemon)[0].split(r":")[1].replace(",","").replace("\\\"","").replace("}","").strip()
+                item = re.findall(r"item.*?,", pokemon)[0].split(r":")[1].replace("\\\"","").replace("}","").replace(",","").strip()
+
+                pokemon_full_moveset = [None, None, None, None]
+                for move_index,pokemon_move_line in enumerate(pokemon_moveset):
+                    pokemon_full_moveset[move_index] = pokemon_move_line.replace("\\\"","").replace("[","").replace("]","").strip()
+
+                move1 = pokemon_full_moveset[0]
+                move2 = pokemon_full_moveset[1]
+                move3 = pokemon_full_moveset[2]
+                move4 = pokemon_full_moveset[3]
 
                 # For Debug concerns
                 if name == "Null" or name == "null":
                     print("Pokemon Null : ", socket_input)
+                    name = "type:null"
 
                 if len(stats) == 19:
                     gender = stats[3].replace("\\\"","").strip()
