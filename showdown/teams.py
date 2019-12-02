@@ -15,14 +15,15 @@ class Team:
         #self.pokemon_index_to_add = 0
 
     def raise_stat(self, stat_name, levels):
-        print("Applying Buff : ", stat_name, " +", levels," (", self.player, ")")
+        #print("Applying Buff : ", stat_name, " +", levels," (", self.player, ")")
         self.buffs.raise_stat(stat_name, levels)
 
     def lower_stat(self, stat_name, levels):
-        print("Applying Debuff : ", stat_name, " -", levels," (", self.player, ")")
+        #print("Applying Debuff : ", stat_name, " -", levels," (", self.player, ")")
         self.buffs.lower_stat(stat_name, levels)
 
     def reset_buffs(self):
+        #print("Reseting buffs : ", self.player)
         self.buffs.reset()
 
     def set_all_pokemons_to_inactive(self):

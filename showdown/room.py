@@ -541,6 +541,10 @@ class Battle(Room):
                     damage_event_current_hp = damage_event_hp_bar[0].replace("\\n","").replace("fnt","").strip()
                     damage_event_max_hp = 100
                     damage_event_type = "damage"
+
+                if damaged_pokemon_owner == self.own_team.get_player():
+                    if damage_event_current_hp == "0":
+                        self.own_team.reset_buffs()
         
             # heal events
             heals_events = re.findall(r"-heal.*$",line)
@@ -635,6 +639,7 @@ class Battle(Room):
         if damage_event_player == self.opponent_team.get_player():
             if damage_event_current_hp == "0" and damage_event_type == "damage":
                 self.opponent_team.set_all_pokemons_to_inactive()
+                self.opponent_team.reset_buffs()
 
         for boost in boost_events_collection:
             #print(boost[0], " / ", boost[1], " => ", boost[2], " +", boost[3])
@@ -853,6 +858,7 @@ class Battle(Room):
             await asyncio.sleep(2)
 
         #self.opponent_team.print_active_pokemon()
+        #self.own_team.print_active_pokemon()
 
         possible_moves = self.own_team.get_active_pokemon_possible_moves()
 
