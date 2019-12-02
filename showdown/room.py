@@ -861,8 +861,12 @@ class Battle(Room):
             move_id = possible_moves[randomly_generated_move_id-1].get_smogon_id() + 1
             await self.move(move_id,1)
         else:
+            """
             switch_id = random.randint(2,6)
             await self.switch(switch_id,1)
+            """
+            await self.make_switch()
+
 
     @utils.require_client
     async def make_switch(self, client=None,
