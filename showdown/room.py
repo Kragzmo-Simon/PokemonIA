@@ -438,7 +438,6 @@ class Battle(Room):
         if new_pokemon not in self.pokemon_collection:
             self.pokemon_collection.append(new_pokemon)
 
-        # TODO update enemy pokemons
         self.opponent_team.update_pokemons_with_smogon(new_pokemon)
 
         # update on allied pokemons
@@ -829,6 +828,9 @@ class Battle(Room):
                         current_moves_real_collection_names = []
                         for collection_move in self.moves_collection:
                             current_moves_real_collection_names.append(collection_move.get_name())
+
+                        print("current collection : ", current_moves_real_collection_names)
+                        print("supposed collection : ", self.moves_name_collection)
 
                         # resend the command data to smogon
                         for move_name in self.moves_name_collection:
