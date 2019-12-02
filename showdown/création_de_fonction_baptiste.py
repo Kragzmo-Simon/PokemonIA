@@ -703,11 +703,11 @@ new_attack4.update_smogon_data('Fire','Physical','120','100','Has a 10% chance t
 print(Move.get_name(new_attack))
 
 new_pokemon=Pokemon('Charizard','6','100','male','360','360','293','280','348','295','328',new_attack,new_attack2,new_attack3,new_attack4,'Solar Power','Jolly','Charizardite X','active')
-new_pokemon.update_smogon_data(['Fire','FLying'],['Blaze','Solar Power'],'78','84','79','109','85','100')
+new_pokemon.update_smogon_data(['Fire','Flying'],['Blaze','Solar Power'],'78','84','79','109','85','100')
 print(Move.is_castable(new_attack))
 
 new_pokemon2=Pokemon('Venusaur','3','100','male','364','364','263','365','299','299','259','ddd','aaa','bbb','ccc','Chlorophyll','Bold','Venusaurite','active')
-new_pokemon2.update_smogon_data(['Grass','Poison'],['Chlorophyll','Overgrow'],'80','82','83','100','100','80')
+new_pokemon2.update_smogon_data(['Grass','Electric'],['Chlorophyll','Overgrow'],'80','82','83','100','100','80')
 
 #retourne la table des types
 def type_table():
@@ -837,17 +837,17 @@ def assert_opponent_pokemon_threat(pokemon1,pokemon2):
         attackphy.update_smogon_data(type_pokemon,'Physical','100','100','stabed attack')
         attackspe=Move(type_pokemon+'phy',None,None,False,10,None)
         attackspe.update_smogon_data(type_pokemon,'Special','100','100','stabed attack')
-        print(Move.get_move_type(attack_spe))
+        print(Move.get_move_type(attackspe))
         phy_damage=damage_calcul(pokemon2,pokemon1,attackphy)
         spe_damage=damage_calcul(pokemon2,pokemon1,attackspe)
-        if (max_damage>phy_damage):
+        if (max_damage<phy_damage):
             max_damage=phy_damage
-        if (max_damage>spe_damage):
+        if (max_damage<spe_damage):
             max_damage=spe_damage
     return max_damage
 
-assert_opponent_pokemon_threat(new_pokemon2,new_pokemon)
-            
+assert_opponent_pokemon_threat(new_pokemon,new_pokemon2)            
+
             
 damage_calcul(new_pokemon,new_pokemon2,new_attack)
 
