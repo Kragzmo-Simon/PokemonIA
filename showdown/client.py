@@ -291,7 +291,7 @@ class Client(user.User):
         socket_input = await self.websocket.recv()
         logger.debug('<<< Received:\n{}'.format(socket_input))
 
-        #print(socket_input)
+        print("\nLast message from showdown : \n", socket_input)
 
         if "error" in socket_input:
             print("\nErreur ici : ", socket_input)

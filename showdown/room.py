@@ -651,7 +651,8 @@ class Battle(Room):
                 # create the opponent pokemon if needed and set it to be the only active pokemon
                 if switch[1] not in pokemon_names:
                     self.opponent_team.set_all_pokemons_to_inactive()
-                    new_pokemon = Pokemon(switch[1],None,None,None,None,None,
+                    # switch[2] contains the pokemon level
+                    new_pokemon = Pokemon(switch[1],None,switch[2],None,None,None,
                                 None,None,None,None,None,
                                 None,None,None,None,
                                 None,None,None, True)
