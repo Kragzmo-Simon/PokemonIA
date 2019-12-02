@@ -291,7 +291,7 @@ class Client(user.User):
         socket_input = await self.websocket.recv()
         logger.debug('<<< Received:\n{}'.format(socket_input))
 
-        print("\nLast message from showdown : \n", socket_input)
+        #print("\nLast message from showdown : \n", socket_input)
 
         if "error" in socket_input:
             print("\nErreur ici : ", socket_input)
@@ -306,12 +306,13 @@ class Client(user.User):
 
         #if "wait"
 
-        if "turn|" in socket_input:
+        if "turn|" in socket_input or "|upkeep" in socket_input:
             print("UPDATING TURN")
             assert len(self.rooms) == 1
             for key in self.rooms:
                 current_battle = self.rooms.get(key)
-                current_battle.add_turn()
+                if "turn|" in socket_input:
+                    current_battle.add_turn()
                 await current_battle.update_turn(socket_input)
                 #current_battle.print_own_team()
             print("UPDATE OF TURN DONE")

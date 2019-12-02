@@ -630,6 +630,11 @@ class Battle(Room):
         # Résumé du tour
         #print(damage_event_player, " / ", damage_event_pokemon, " => ", damage_event_current_hp, " / ", 
         #            damage_event_max_hp, "(", damage_event_type,")")
+        
+        # If damage kills opponent pokemon, make all opponent's pokemons inactive
+        if damage_event_player == self.opponent_team.get_player():
+            if damage_event_current_hp == "0" and damage_event_type == "damage":
+                self.opponent_team.set_all_pokemons_to_inactive()
 
         for boost in boost_events_collection:
             #print(boost[0], " / ", boost[1], " => ", boost[2], " +", boost[3])
@@ -665,8 +670,8 @@ class Battle(Room):
                     self.opponent_team.set_all_pokemons_to_inactive()
                     self.opponent_team.make_pokemon_active(switch[1])
 
-                    current_pokemon = self.opponent_team.get_pokemon(switch[1])
-                    current_pokemon.self_print()
+                    #current_pokemon = self.opponent_team.get_pokemon(switch[1])
+                    #current_pokemon.self_print()
 
 
     def print_own_team(self):
@@ -847,7 +852,7 @@ class Battle(Room):
                 #print("Checking smogon data update...................... : ", smogon_data_has_not_been_updated)
             await asyncio.sleep(2)
 
-        #self.own_team.print_active_pokemon()
+        #self.opponent_team.print_active_pokemon()
 
         possible_moves = self.own_team.get_active_pokemon_possible_moves()
 
