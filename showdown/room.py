@@ -404,7 +404,7 @@ class Battle(Room):
     def update_smogon_data_pokemon(self, socket_input):
         # move name
         pokemon_link = re.findall(r"<a.*href.*?</a>", socket_input)
-        pokemon_name = re.findall(r">.*?<", pokemon_link[-1])[0].replace(">","").replace("<","").replace(" ","").replace(".","").replace("'","").strip().lower()
+        pokemon_name = re.findall(r">.*?<", pokemon_link[-1])[0].replace(">","").replace("<","").replace(" ","").replace(".","").replace("-","").replace("'","").replace("'","").strip().lower()
 
         # types
         pokemon_types_collection = []
@@ -546,7 +546,7 @@ class Battle(Room):
                 damaged_pokemon_owner = damage_event_pokemon_and_player[0].replace("a","").strip()
                 if damaged_pokemon_owner == self.opponent_team.get_player():
                     damage_event_player = damaged_pokemon_owner
-                    damage_event_pokemon = damage_event_pokemon_and_player[1].replace(" ","").replace(".","").strip().lower()
+                    damage_event_pokemon = damage_event_pokemon_and_player[1].replace(" ","").replace(".","").replace("-","").replace("'","").replace(",","").strip().lower()
                     damage_event_current_hp = damage_event_hp_bar[0].replace("\\n","").replace("fnt","").strip()
                     damage_event_max_hp = 100
                     damage_event_type = "damage"
@@ -565,7 +565,7 @@ class Battle(Room):
                 healed_pokemon_owner = heal_event_pokemon_and_player[0].replace("a","").strip()
                 if healed_pokemon_owner == self.opponent_team.get_player():
                     damage_event_player = healed_pokemon_owner
-                    damage_event_pokemon = heal_event_pokemon_and_player[1].strip().lower()
+                    damage_event_pokemon = heal_event_pokemon_and_player[1].replace(" ","").replace(".","").replace("-","").replace("'","").replace(",","").strip().lower()
                     damage_event_current_hp = heal_event_hp_bar[0].replace("\\n","").replace("fnt","").strip()
                     damage_event_max_hp = 100
                     damage_event_type = "heal"
@@ -610,7 +610,7 @@ class Battle(Room):
                 switch_event_pokemon_and_player = switch_infos[1].split(r":")
 
                 switch_event_player = switch_event_pokemon_and_player[0].replace("a","").strip()
-                switch_event_pokemon = switch_event_pokemon_and_player[1].strip().lower()
+                switch_event_pokemon = switch_event_pokemon_and_player[1].replace("'","").replace(" ","").replace("-","").replace(",","").replace(".","").strip().lower()
                 switch_event_pokemon_level = switch_infos[2].split(",")[1].replace("L","").strip()
                 switch_event_pokemon_current_hp = switch_infos[3].split("/")[0]
                 switch_event_pokemon_max_hp = 100
@@ -926,20 +926,20 @@ class Battle(Room):
         active_pokemon_move_selected = None
         active_pokemon_max_dmg = 0
         active_pokemon_speed_tie_won = False
-        active_pokemon_tanking_capacity = 0
+        active_pokemon_tanking_threat = 0
         if pokemon1 is not None and pokemon2 is not None:
             print("selecting a move")
             active_pokemon_move_selected, active_pokemon_max_dmg = select_move(pokemon1,pokemon2)
             print("determining speed tie")
             active_pokemon_speed_tie_won = determince_speed_tie(pokemon1, pokemon2)
             print("determing tanking capacity")
-            active_pokemon_tanking_capacity = assert_opponent_pokemon_threat(pokemon1, pokemon2)
+            active_pokemon_tanking_threat = assert_opponent_pokemon_threat(pokemon1, pokemon2)
             print("active pokemon options calculation done")
 
             #print("checking : ", pokemon1.get_name(), " / ", pokemon2.get_name())
             #print("dat speed tie : ", active_pokemon_speed_tie_won)
             #print("_______________best move : ", active_pokemon_move_selected, " (", active_pokemon_max_dmg, ")")
-            #print("tanking capacity : ", active_pokemon_tanking_capacity)
+            #print("tanking capacity : ", active_pokemon_tanking_threat)
         else:
             print("Erreur : un des pokemons est None")
 
@@ -947,13 +947,13 @@ class Battle(Room):
         if active_pokemon_max_dmg >= 100 and active_pokemon_speed_tie_won:
             print("choose move (1) : ", active_pokemon_move_selected)
             active_pokemon_move_selected_should_be_used = True
-        if active_pokemon_max_dmg >= active_pokemon_tanking_capacity and active_pokemon_speed_tie_won:
+        if active_pokemon_max_dmg >= active_pokemon_tanking_threat and active_pokemon_speed_tie_won:
             print("choose move (2) : ", active_pokemon_move_selected)
             active_pokemon_move_selected_should_be_used = True
-        if active_pokemon_max_dmg >= 100 and active_pokemon_tanking_capacity < 90:
+        if active_pokemon_max_dmg >= 100 and active_pokemon_tanking_threat < 90:
             print("choose move (3) : ", active_pokemon_move_selected)
             active_pokemon_move_selected_should_be_used = True
-        if active_pokemon_max_dmg >= 50 and active_pokemon_tanking_capacity < 45:
+        if active_pokemon_max_dmg >= 50 and active_pokemon_tanking_threat < 45:
             print("choose move (4) : ", active_pokemon_move_selected)
             active_pokemon_move_selected_should_be_used = True
 
@@ -973,30 +973,30 @@ class Battle(Room):
             switch_pokemon_move_selected = None
             switch_pokemon_max_dmg = 0
             switch_pokemon_speed_tie_won = False
-            switch_pokemon_tanking_capacity = 0
+            switch_pokemon_tanking_threat = 0
             if switch_pokemon is not None and pokemon2 is not None:
                 print("selecting a move")
                 switch_pokemon_move_selected, switch_pokemon_max_dmg = select_move(switch_pokemon,pokemon2)
                 print("determining speed tie")
                 switch_pokemon_speed_tie_won = determince_speed_tie(switch_pokemon, pokemon2)
                 print("determing tanking capacity")
-                switch_pokemon_tanking_capacity = assert_opponent_pokemon_threat(switch_pokemon, pokemon2)
+                switch_pokemon_tanking_threat = assert_opponent_pokemon_threat(switch_pokemon, pokemon2)
                 print("switch pokemon options calculation done")
 
                 #print("----checking : ", switch_pokemon.get_name(), " / ", pokemon2.get_name())
                 #print("----dat speed tie : ", switch_pokemon_speed_tie_won)
                 #print("----best move : ", switch_pokemon_move_selected, " (", switch_pokemon_max_dmg, ")")
-                #print("----tanking capacity : ", switch_pokemon_tanking_capacity)
+                #print("----tanking capacity : ", switch_pokemon_tanking_threat)
 
             print("Determining switch reliability")
             switch_pokemon_should_be_used = False
-            if switch_pokemon_speed_tie_won and switch_pokemon_max_dmg >= 100 and switch_pokemon_tanking_capacity < 90:
+            if switch_pokemon_speed_tie_won and switch_pokemon_max_dmg >= 100 and switch_pokemon_tanking_threat < 90:
                 print("choose switch (5) : ", switch_pokemon.get_name())
                 switch_pokemon_should_be_used = True
-            if switch_pokemon_tanking_capacity < 25 and switch_pokemon_max_dmg > (2 * switch_pokemon_tanking_capacity):
+            if switch_pokemon_tanking_threat < 25 and switch_pokemon_max_dmg > (2 * switch_pokemon_tanking_threat):
                 print("choose switch (6) : ", switch_pokemon.get_name())
                 switch_pokemon_should_be_used = True
-            if switch_pokemon_max_dmg >= 100 and switch_pokemon_tanking_capacity < 45:
+            if switch_pokemon_max_dmg >= 100 and switch_pokemon_tanking_threat < 45:
                 print("choose switch (7) : ", switch_pokemon.get_name())
                 switch_pokemon_should_be_used = True
 
@@ -1011,6 +1011,16 @@ class Battle(Room):
         print("Using Default Move")
         possible_default_moves=pokemon1.get_possible_moves()
         print("Default moves retrieved")
+        for default_move in possible_default_moves:
+            if default_move.has_power():
+                # select a move that has power
+                default_command_to_send = default_move.get_name()
+                await self.move(default_command_to_send,1)
+                return
+        print("Declaring a default switch")
+        await self.make_switch()
+        return
+        """
         if len(possible_default_moves) != 0:
             default_command_to_send = possible_default_moves[0].get_name()
             print("Declaring a default move")
@@ -1020,6 +1030,7 @@ class Battle(Room):
             print("Declaring a default switch")
             await self.make_switch()
             return
+        """
 
 
 
@@ -1027,7 +1038,9 @@ class Battle(Room):
     async def make_switch(self, client=None,
         delay=0, lifespan=math.inf):
         """
-        Sends a command that performs a random switch.
+        Sends a command that performs a switch.
+        """
+
         """
         possible_switchs = self.own_team.get_possible_pokemon_switch()
 
@@ -1038,6 +1051,68 @@ class Battle(Room):
             switch_id = possible_switchs[randomly_generated_switch_id]
 
             await self.switch(switch_id,1)
+        """
+
+        pokemon2 = self.opponent_team.get_active_pokemon()
+        possible_switchs = self.own_team.get_possible_pokemon_switch()
+        print("pokemon2 retrieved")
+        if pokemon2 is not None:
+            pokemon2.set_stats_enemy_pokemon()
+            print("stats update done")
+
+            print("Calculating switch options")
+
+            for switch in possible_switchs:
+                print("Checking switch : ", switch)
+                switch_pokemon = self.own_team.get_pokemon(switch)
+                print("Pokemon ", switch, "retrieved")
+
+                switch_pokemon_move_selected = None
+                switch_pokemon_max_dmg = 0
+                switch_pokemon_speed_tie_won = False
+                switch_pokemon_tanking_threat = 0
+                if switch_pokemon is not None and pokemon2 is not None:
+                    print("selecting a move")
+                    switch_pokemon_move_selected, switch_pokemon_max_dmg = select_move(switch_pokemon,pokemon2)
+                    print("determining speed tie")
+                    switch_pokemon_speed_tie_won = determince_speed_tie(switch_pokemon, pokemon2)
+                    print("determing tanking capacity")
+                    switch_pokemon_tanking_threat = assert_opponent_pokemon_threat(switch_pokemon, pokemon2)
+                    print("switch pokemon options calculation done")
+
+                    #print("----checking : ", switch_pokemon.get_name(), " / ", pokemon2.get_name())
+                    #print("----dat speed tie : ", switch_pokemon_speed_tie_won)
+                    #print("----best move : ", switch_pokemon_move_selected, " (", switch_pokemon_max_dmg, ")")
+                    #print("----tanking capacity : ", switch_pokemon_tanking_threat)
+
+                print("Determining switch reliability")
+                switch_pokemon_should_be_used = False
+                if switch_pokemon_speed_tie_won and switch_pokemon_max_dmg >= 100:
+                    print("choose switch (8) : ", switch_pokemon.get_name())
+                    switch_pokemon_should_be_used = True
+                #if switch_pokemon_tanking_threat < 25 and switch_pokemon_max_dmg > (2 * switch_pokemon_tanking_threat):
+                if switch_pokemon_max_dmg >= switch_pokemon_tanking_threat and switch_pokemon_speed_tie_won:
+                    print("choose switch (9) : ", switch_pokemon.get_name())
+                    switch_pokemon_should_be_used = True
+                if switch_pokemon_max_dmg >= 100 and switch_pokemon_tanking_threat < 90:
+                    print("choose switch (10) : ", switch_pokemon.get_name())
+                    switch_pokemon_should_be_used = True
+                if switch_pokemon_max_dmg >= 50 and switch_pokemon_tanking_threat < 45:
+                    print("choose switch (11) : ", switch_pokemon.get_name())
+                    switch_pokemon_should_be_used = True
+
+                if switch_pokemon_should_be_used:
+                    # TODO send command for switch
+                    #print("I choose this switch : ", switch_pokemon.get_name())
+                    print("Declaring a well calculated switch : ", switch)
+                    await self.switch(switch_pokemon.get_name(),1)
+                    return
+        
+        # if no switch was made, send a random one
+        randomly_generated_switch_id = random.randint(0,len(possible_switchs)-1)
+        switch_id = possible_switchs[randomly_generated_switch_id]
+
+        await self.switch(switch_id,1)
 
     @utils.require_client
     async def undo(self, client=None, delay=0, lifespan=math.inf):

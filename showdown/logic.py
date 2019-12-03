@@ -2,6 +2,7 @@
 from .teams import *
 #from teams import *
 from random import randint
+import re
 
 def determince_speed_tie(pokemon1, pokemon2):
     #print("determining speed tie between : ", pokemon1.get_name(), " / ", pokemon2.get_name())
@@ -12,6 +13,7 @@ def determince_speed_tie(pokemon1, pokemon2):
 
 #retourne la table des types
 def type_table():
+    print("loading table of types")
     weakness_lines=[]
     weakness_table=[]
     weakness_file = open("./data/pokemon_type.txt",'r')
@@ -26,54 +28,82 @@ def type_table():
     weakness_file.close()
     for i in weakness_lines:
         weakness_table+=[i.split(',')]
+    print("table of types loaded")
     return (weakness_table)
 
 #retourne le coefficient multiplicateur CM entre l'attaque et lle pokémon qui subbit l'attaque 
 def type_multipplicator(attack,pokemon):
+    print("calculating type multiplicator")
     table_type=type_table()
+    print("retrieving types of pokemon : ", pokemon.get_name())
     type_pokemon=Pokemon.get_types(pokemon)
+    print("types are : ", type_pokemon)
+    print("retrieving type of move : ", attack.get_name())
     type_attack=Move.get_move_type(attack)
+    print("type is : ", type_attack)
     attack_type_indice=0
+    print("going through type table")
     for indice in range(0,len(table_type)):
         if(type_attack==table_type[indice][0]):
             attack_type_indice=indice
+    print("calculated attack type indice")
     CM=1
+    print("iterating over pokemon types")
     for pokemon_type in type_pokemon:
         pokemon_type_indice=0
+        print("checking type ", pokemon_type)
         for indice in range(0,len(table_type)):
             if(pokemon_type==table_type[0][indice]):
                 pokemon_type_indice=indice
+        print("calculating CM")
         CM=CM*float(table_type[attack_type_indice][pokemon_type_indice])
+    print("CM fount : ", CM)
     return CM
 
 def damage_calcul(pokemon1,pokemon2,attack):
+    print("determing damage")
+    print(pokemon1.get_name(), " => ", pokemon2.get_name(), " through ", attack.get_name())
     Att=0
     Def=1
     Stab=1
     Pui=0
     damage=0
+    print("retrieving current hp : ", Pokemon.get_current_hp(pokemon2))
     current_hp=int(Pokemon.get_current_hp(pokemon2))
-
-    max_hp=int(Pokemon.get_max_hp(pokemon2))
+    print("retrieving max hp : ", Pokemon.get_max_hp(pokemon2))
+    # TODO temporary fix to remove status from hp bar
+    max_hp_statusless = re.findall(r"[0-9]+",Pokemon.get_max_hp(pokemon2))
+    print("max hp without status : ", max_hp_statusless)
+    max_hp=int(max_hp_statusless[0])
 
     current_hp=max_hp*(current_hp/100)
+    print("calculating current hp bar : ", current_hp)
 
+    print("checking move type : ", Move.get_category(attack))
     if (Move.get_category(attack) =='special'):
         Att=int(Pokemon.get_special_attack(pokemon1))
         Def=int(Pokemon.get_special_defense(pokemon2))
     if (Move.get_category(attack) =='physical'):
         Att=int(Pokemon.get_attack(pokemon1))
         Def=int(Pokemon.get_defense(pokemon2))
+    print("update of off/def stats done")
+    print("retrieving types of ", pokemon1.get_name())
     pokemon_type=Pokemon.get_types(pokemon1)
     for type_pokemon in pokemon_type:
+        print("checking stab for ", type_pokemon)
         if (type_pokemon==Move.get_move_type(attack)):
             Stab=1.5
+    print("retrieving level of pokemon : ",Pokemon.get_level(pokemon1))
     lvl=int(Pokemon.get_level(pokemon1))
-    if (not(Move.get_category(attack)=='status')):
+    if (not(Move.get_category(attack)=='status')) and Move.get_power(attack) is not None:
+        print("retrieving power of move : ",Move.get_power(attack))
         Pui=int(Move.get_power(attack))
         CM=randint(100,100)/100*Stab*type_multipplicator(attack,pokemon2)
         damage=int(int((((lvl*0.4+2)*Att*Pui)/(Def*50))+2)*CM)
+        print("damage calculation done")
+    print("calculating percentage damage (current_hp : ",current_hp , ", damage : ", damage, ")")
     percentage_hp=int((damage/current_hp)*100)
+    print("percentage damage : ", percentage_hp)
     return percentage_hp
 
 #fonction qui choisi quelle move du pokémon il est préférable de choisir pour l'attaque d'un pokemon 1 sur un pokemon 2

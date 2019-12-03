@@ -276,6 +276,8 @@ class Pokemon:
         return self.active
 
     def get_name(self):
+        if self.name == "EiscueNoice":
+            self.name = "Eiscue"
         return self.name
 
     def get_types(self):
@@ -503,8 +505,8 @@ class Move:
 
         # Information below will be updated when the data is retrieved from smogon
         self.types = None
-        self.power = 9000
-        self.accuracy = 9000
+        self.power = None
+        self.accuracy = None
         self.description = None
         self.category = None
 
@@ -533,6 +535,11 @@ class Move:
             return True
         else:
             return False
+
+    def has_power(self):
+        if self.power is not None:
+            return True
+        return False
 
     def get_name(self):
         return self.name
