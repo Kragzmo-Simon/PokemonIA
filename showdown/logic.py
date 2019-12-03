@@ -78,24 +78,33 @@ def damage_calcul(pokemon1,pokemon2,attack):
 
 #fonction qui choisi quelle move du pokémon il est préférable de choisir pour l'attaque d'un pokemon 1 sur un pokemon 2
 def select_move(pokemon1,pokemon2):
+    print("retrieving the moves of : ", pokemon1.get_name())
     moves=Pokemon.get_possible_moves(pokemon1)
+    print("moves retrieved")
     moveset = [None,None,None,None]
     for move_index,move in enumerate(moves):
         moveset[move_index] = move
+    print("moveset size : ", len(moves), "/", len(moveset))
+    print(moveset)
     move_selected=None
     max_damage=0
+    print("determing move1 damage")
     if moveset[0] is not None and (damage_calcul(pokemon1,pokemon2,moveset[0])>max_damage):
         max_damage=damage_calcul(pokemon1,pokemon2,moveset[0])
         move_selected=moveset[0].get_name()
+    print("determing move2 damage")
     if moveset[1] is not None and (damage_calcul(pokemon1,pokemon2,moveset[1])>max_damage):
         max_damage=damage_calcul(pokemon1,pokemon2,moveset[1])
         move_selected=moveset[1].get_name()
+    print("determing move3 damage")
     if moveset[2] is not None and (damage_calcul(pokemon1,pokemon2,moveset[2])>max_damage):
         max_damage=damage_calcul(pokemon1,pokemon2,moveset[2])
         move_selected=moveset[2].get_name()
+    print("determing move4 damage")
     if moveset[3] is not None and (damage_calcul(pokemon1,pokemon2,moveset[3])>max_damage):
         max_damage=damage_calcul(pokemon1,pokemon2,moveset[3])
         move_selected=moveset[3].get_name()
+    print("best move determined : ", move_selected)
     return move_selected,max_damage
 
 def assert_opponent_pokemon_threat(pokemon1,pokemon2):

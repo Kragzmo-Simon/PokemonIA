@@ -284,7 +284,14 @@ class Battle(Room):
                 pokemon_general_stats = re.findall(r"stats.*?}", pokemon)[0].split(r",")
                 pokemon_moveset = re.findall(r"\[.*?\]", pokemon)[0].split(r",")
 
-                name = re.findall(r"details.*?,", pokemon)[0].split(r":")[1].replace("\\\"","").replace(",","").replace(".","").replace(" ","").replace("'","").strip()
+                if len(re.findall(r"details.*?,", pokemon)[0].split(r":")) == 2:
+                    name = re.findall(r"details.*?,", pokemon)[0].split(r":")[1].replace("\\\"","").replace(",","").replace("-","").replace(".","").replace(" ","").replace("'","").strip()
+                else:
+                    # Type:Null pokemon
+                    name_decomposed = re.findall(r"details.*?,", pokemon)[0].split(r":")
+                    name = name_decomposed[1] + name_decomposed[2]
+                    name = name.replace("\\\"","").replace(",","").replace("-","").replace(".","").replace(" ","").replace("'","").strip()
+                    #name = "TypeNull"
                 level = stats[2].replace("\\\"","").replace("L","").strip()
                 if len(hp_stats) == 2:
                     current_hp = hp_stats[0]
@@ -315,10 +322,12 @@ class Battle(Room):
                 move3 = pokemon_full_moveset[2]
                 move4 = pokemon_full_moveset[3]
 
+                """
                 # For Debug concerns
                 if name == "Null" or name == "null" or name == "Type" or name == "type":
                     print("Pokemon Null : ", socket_input)
                     name = "type:null"
+                """
 
                 if len(stats) == 19:
                     gender = stats[3].replace("\\\"","").strip()
