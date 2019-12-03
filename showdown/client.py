@@ -318,16 +318,20 @@ class Client(user.User):
             print("UPDATE OF TURN DONE")
 
         if "|raw|" in socket_input and "pokemonnamecol" in socket_input:
+            print("UPDATING POKEMON INFO")
             assert len(self.rooms) == 1
             for key in self.rooms:
                 current_battle = self.rooms.get(key)
                 current_battle.update_smogon_data_pokemon(socket_input)
+            print("UPDATE OF POKEMON DONE")
 
         if "|raw|" in socket_input and "movenamecol" in socket_input:
+            print("UPDATING POKEMON INFO")
             assert len(self.rooms) == 1
             for key in self.rooms:
                 current_battle = self.rooms.get(key)
                 current_battle.update_smogon_data_move(socket_input)
+            print("UPDATE OF MOVE DONE")
 
 
         #Showdown sends this response on initial connection

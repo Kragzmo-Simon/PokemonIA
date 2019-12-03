@@ -919,9 +919,13 @@ class Battle(Room):
         active_pokemon_speed_tie_won = False
         active_pokemon_tanking_capacity = 0
         if pokemon1 is not None and pokemon2 is not None:
+            print("selecting a move")
             active_pokemon_move_selected, active_pokemon_max_dmg = select_move(pokemon1,pokemon2)
+            print("determining speed tie")
             active_pokemon_speed_tie_won = determince_speed_tie(pokemon1, pokemon2)
+            print("determing tanking capacity")
             active_pokemon_tanking_capacity = assert_opponent_pokemon_threat(pokemon1, pokemon2)
+            print("active pokemon options calculation done")
 
             #print("checking : ", pokemon1.get_name(), " / ", pokemon2.get_name())
             #print("dat speed tie : ", active_pokemon_speed_tie_won)
@@ -962,10 +966,13 @@ class Battle(Room):
             switch_pokemon_speed_tie_won = False
             switch_pokemon_tanking_capacity = 0
             if switch_pokemon is not None and pokemon2 is not None:
-                print("Calculating switch heuristics")
+                print("selecting a move")
                 switch_pokemon_move_selected, switch_pokemon_max_dmg = select_move(switch_pokemon,pokemon2)
+                print("determining speed tie")
                 switch_pokemon_speed_tie_won = determince_speed_tie(switch_pokemon, pokemon2)
+                print("determing tanking capacity")
                 switch_pokemon_tanking_capacity = assert_opponent_pokemon_threat(switch_pokemon, pokemon2)
+                print("switch pokemon options calculation done")
 
                 #print("----checking : ", switch_pokemon.get_name(), " / ", pokemon2.get_name())
                 #print("----dat speed tie : ", switch_pokemon_speed_tie_won)

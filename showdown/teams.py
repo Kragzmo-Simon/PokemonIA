@@ -425,10 +425,23 @@ class Pokemon:
                                                     smogon_move_accuracy, 
                                                     smogon_move_description)
                     else:
-                        # pokemon active just fainted
+                        # pokemon active just fainted or used uturn
                         # or is using outrage (other moves have not been loaded)
                         print("ERREUR MOVE NONE : ", move_name)
                         pok_is_using_trapping_move = True
+
+                        # TODO Temporary fix
+                        new_move = Move(move_name, None, None, False, 8, None)
+                        new_move.update_smogon_data(smogon_move_type, 
+                                                    smogon_move_category, 
+                                                    smogon_move_power, 
+                                                    smogon_move_accuracy, 
+                                                    smogon_move_description)
+                        
+                        # add the move in the pokemon moveset
+                        new_move_set = self.complete_moves
+                        new_move_set.append(new_move)
+                        self.update_moves(new_move_set)
                 if (not self.active) or pok_is_using_trapping_move:
                     # if the pokemon is not active
                     new_move = Move(move_name, None, None, False, 8, None)
