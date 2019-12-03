@@ -900,11 +900,18 @@ class Battle(Room):
     async def select_best_decision(self, client=None,
         delay=0, lifespan=math.inf):
 
+        print("Retrieving data...")
         # get both active pokemons and other switchs
         pokemon1 = self.own_team.get_active_pokemon()
+        print("pokemon1 retrieved")
         pokemon2 = self.opponent_team.get_active_pokemon()
+        print("pokemon2 retrieved")
         pokemon2.set_stats_enemy_pokemon()
+        print("stats update done")
         possible_switchs = self.own_team.get_possible_pokemon_switch()
+        print("switch options retrieved")
+
+        print("Calculating active pokemon options")
 
         # heuristics for the active pokemon (considering a direct move)
         active_pokemon_move_selected = None
@@ -943,7 +950,7 @@ class Battle(Room):
             await self.move(active_pokemon_move_selected,1)
             return
 
-        print("Considering a switch")
+        print("Calculating switch options")
 
         for switch in possible_switchs:
             switch_pokemon = self.own_team.get_pokemon(switch)
