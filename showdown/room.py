@@ -9,6 +9,7 @@ import random
 import re
 import asyncio
 from .teams import *
+from .logic import *
 
 class Room:
     """
@@ -844,11 +845,19 @@ class Battle(Room):
             # check if the data has been updated
             if  current_moves_collection_size == current_moves_name_collection_size:
 
+                data_commands_names_to_resend = []
                 # smogon_data_has_not_been_updated becomes false once all the data has been correctly updated in all pokemons
-                smogon_update, data_commands_names_to_resend = self.own_team.check_smogon_data_update()
+                smogon_update, data_commands_names_to_resend1 = self.own_team.check_smogon_data_update()
                 smogon_update2, data_commands_names_to_resend2 = self.opponent_team.check_smogon_data_update()
-                # TODO mettre le check sur la team adverse
-                smogon_data_has_not_been_updated = not smogon_update
+                
+                if smogon_update and smogon_update2:
+                    # TODO mettre le check sur la team adverse
+                    smogon_data_has_not_been_updated = False
+                else:
+                    for data_command in data_commands_names_to_resend1:
+                        data_commands_names_to_resend.append(data_command)
+                    for data_command in data_commands_names_to_resend2:
+                        data_commands_names_to_resend.append(data_command)
 
                 # resend data commands if need be
                 if smogon_data_has_not_been_updated:
@@ -863,6 +872,12 @@ class Battle(Room):
         #self.own_team.print_active_pokemon()
 
         possible_moves = self.own_team.get_active_pokemon_possible_moves()
+
+        await self.select_best_decision()
+        #pokemon1 = self.own_team.get_active_pokemon()
+        #pokemon2 = self.opponent_team.get_active_pokemon()
+        #pokemon1.self_print()
+        #pokemon2.self_print()
 
         #for move in possible_moves:
         #    print("dat id : ", move.get_smogon_id())
@@ -880,6 +895,26 @@ class Battle(Room):
             await self.switch(switch_id,1)
             """
             await self.make_switch()
+
+    # fonction qui renvoie le meilleur switch ou move à effectuer
+    @utils.require_client
+    async def select_best_decision(self, client=None,
+        delay=0, lifespan=math.inf):
+        # get both active pokemons
+        print("salut")
+
+        pokemon1 = self.own_team.get_active_pokemon()
+        pokemon2 = self.opponent_team.get_active_pokemon()
+
+        if pokemon1 is not None and pokemon2 is not None:
+            print("YESSAI&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+            #pokemon1.self_print()
+            #pokemon2.self_print()
+            move_selected, max_dmg = select_move(pokemon1,pokemon2)
+            print("best move : ", move_selected, " (", max_dmg, ")")
+        else:
+            print("CESTLAMERDE@@@@@@@@@@@@@@@@@@@@@@@@@")
+        print("u made it")
 
 
     @utils.require_client

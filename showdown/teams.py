@@ -75,6 +75,13 @@ class Team:
                 possible_switch_names.append(pokemon.get_name())
         return possible_switch_names
 
+    def get_active_pokemon(self):
+        for pokemon in self.pokemons:
+            if pokemon.is_active():
+                return pokemon
+        return None
+
+
     def get_active_pokemon_possible_moves(self):
         for pokemon in self.pokemons:
             if pokemon is not None and pokemon.is_active():
@@ -93,7 +100,7 @@ class Team:
             else:
                 print("A pokemon is NONE")
                 return False, []
-        print("The team was correctly updated")
+        print("The team was correctly updated : ", self.player)
         return True, []
 
     def update_moves_with_smogon(self, smogon_move):
@@ -278,6 +285,15 @@ class Pokemon:
             if move.has_name(move_name):
                 return move
         return None
+
+    def get_attack(self):
+        return self.attack
+
+    def get_defense(self):
+        return self.defense
+
+    def get_level(self):
+        return self.level
 
     def has_been_updated_with_smogon(self):
         # check that the pokemon moves have been loaded
