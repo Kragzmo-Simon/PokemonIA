@@ -230,6 +230,31 @@ class Pokemon:
         self.base_speed = base_speed
         self.smogon_data_has_been_retrieved = True
 
+    def set_stats_enemy_pokemon(self):
+        iv=31
+
+        hp = int(self.get_base_hp())
+        attack=int(self.get_base_attack())
+        defense=int(self.get_base_defense())
+        special_attack=int(self.get_base_special_attack())
+        special_defense=int(self.get_base_special_defense())
+        spd=int(self.get_base_speed())
+        lvl=int(self.get_level())
+
+        new_hp=int(((2*hp+iv)*lvl)/100+lvl+10)+17
+        new_attack=int(((2*attack+iv)*lvl)/100+5)+17
+        new_defense=int(((2*defense+iv)*lvl)/100+5)+17
+        new_special_attack=int(((2*special_attack+iv)*lvl)/100+5)+17
+        new_special_defense=int(((2*special_defense+iv)*lvl)/100+5)+17
+        new_spd=int(((2*spd+iv)*lvl)/100+5)+17
+
+        self.set_max_hp(new_hp)
+        self.set_attack(str(new_attack))
+        self.set_defense(str(new_defense))
+        self.set_special_attack(str(new_special_attack))
+        self.set_special_defense(str(new_special_defense))
+        self.set_special_speed(str(new_spd))
+
     def update_moves(self, moves):
         self.complete_moves = moves
 
@@ -253,9 +278,6 @@ class Pokemon:
     def get_name(self):
         return self.name
 
-    def get_current_hp(self):
-        return self.current_hp
-
     def get_types(self):
         return self.types_collection
 
@@ -264,6 +286,12 @@ class Pokemon:
 
     def get_base_hp(self):
         return self.base_hp
+
+    def get_max_hp(self):
+        return self.max_hp
+
+    def set_max_hp(self,new_max_hp):
+        self.max_hp=str(new_max_hp)
 
     def get_base_attack(self):
         return self.base_attack
@@ -286,14 +314,47 @@ class Pokemon:
                 return move
         return None
 
-    def get_attack(self):
-        return self.attack
-
-    def get_defense(self):
-        return self.defense
-
     def get_level(self):
         return self.level
+
+    def get_current_hp(self):
+        return self.current_hp
+
+    def set_current_hp(self, new_current_hp):
+        self.current_hp=str(new_current_hp)
+
+    def set_current_hp(self,new_current_hp):
+        self.current_hp=str(new_current_hp)
+
+    def get_attack(self):
+        return self.attack
+    
+    def set_attack(self,new_attack):
+        self.attack=new_attack
+    
+    def get_defense(self):
+        return self.defense
+    
+    def set_defense(self,new_defense):
+        self.defense=new_defense
+
+    def get_special_attack(self):
+        return self.special_attack
+        
+    def set_special_attack(self,new_special_attack):
+        self.special_attack=new_special_attack
+        
+    def get_special_defense(self):
+        return self.special_defense
+    
+    def set_special_defense(self,new_special_defense):
+        self.special_defense=new_special_defense
+
+    def get_speed(self):
+        return self.speed
+    
+    def set_special_speed(self,new_special_speed):
+        self.speed=new_special_speed
 
     def has_been_updated_with_smogon(self):
         # check that the pokemon moves have been loaded
@@ -370,7 +431,7 @@ class Pokemon:
                         pok_is_using_trapping_move = True
                 if (not self.active) or pok_is_using_trapping_move:
                     # if the pokemon is not active
-                    new_move = Move(move_name)
+                    new_move = Move(move_name, None, None, False, 8, None)
                     new_move.update_smogon_data(smogon_move_type, 
                                                 smogon_move_category, 
                                                 smogon_move_power, 

@@ -1,12 +1,21 @@
 
 from .teams import *
+#from teams import *
 from random import randint
+
+def determince_speed_tie(pokemon1, pokemon2):
+    #print("determining speed tie between : ", pokemon1.get_name(), " / ", pokemon2.get_name())
+    #print("                 ", int(pokemon1.get_speed()), " / ", int(pokemon2.get_speed()))
+    if int(pokemon1.get_speed()) >= int(pokemon2.get_speed()):
+        return True
+    return False
 
 #retourne la table des types
 def type_table():
     weakness_lines=[]
     weakness_table=[]
     weakness_file = open("./data/pokemon_type.txt",'r')
+    #weakness_file = open("../data/pokemon_type.txt",'r')
     
     for weakness_line in weakness_file:
         if (not('fairy,1' in weakness_line)):
@@ -37,17 +46,18 @@ def type_multipplicator(attack,pokemon):
         CM=CM*float(table_type[attack_type_indice][pokemon_type_indice])
     return CM
 
-#calcul les dégats de l'attaque faite par le pokémon 1 sur le pokémon 2
 def damage_calcul(pokemon1,pokemon2,attack):
-    print("JSUISLAAAAAAAAAAAAAAA")
-    pokemon1.self_print()
-    pokemon2.self_print()
-    attack.self_print()
     Att=0
     Def=1
     Stab=1
     Pui=0
     damage=0
+    current_hp=int(Pokemon.get_current_hp(pokemon2))
+
+    max_hp=int(Pokemon.get_max_hp(pokemon2))
+
+    current_hp=max_hp*(current_hp/100)
+
     if (Move.get_category(attack) =='special'):
         Att=int(Pokemon.get_special_attack(pokemon1))
         Def=int(Pokemon.get_special_defense(pokemon2))
@@ -63,35 +73,47 @@ def damage_calcul(pokemon1,pokemon2,attack):
         Pui=int(Move.get_power(attack))
         CM=randint(100,100)/100*Stab*type_multipplicator(attack,pokemon2)
         damage=int(int((((lvl*0.4+2)*Att*Pui)/(Def*50))+2)*CM)
-    return damage
+    percentage_hp=int((damage/current_hp)*100)
+    return percentage_hp
 
 #fonction qui choisi quelle move du pokémon il est préférable de choisir pour l'attaque d'un pokemon 1 sur un pokemon 2
 def select_move(pokemon1,pokemon2):
-    print("JESUIS BIEN ICIIIIIIIIIIIIIIIIIIII")
     moves=Pokemon.get_possible_moves(pokemon1)
     moveset = [None,None,None,None]
     for move_index,move in enumerate(moves):
         moveset[move_index] = move
-    move_selected="aucune attaque n'est sélectionné"
+    move_selected=None
     max_damage=0
-    print("Step1")
     if moveset[0] is not None and (damage_calcul(pokemon1,pokemon2,moveset[0])>max_damage):
         max_damage=damage_calcul(pokemon1,pokemon2,moveset[0])
         move_selected=moveset[0].get_name()
-    print("Step2")
     if moveset[1] is not None and (damage_calcul(pokemon1,pokemon2,moveset[1])>max_damage):
         max_damage=damage_calcul(pokemon1,pokemon2,moveset[1])
         move_selected=moveset[1].get_name()
-    print("Step3")
     if moveset[2] is not None and (damage_calcul(pokemon1,pokemon2,moveset[2])>max_damage):
         max_damage=damage_calcul(pokemon1,pokemon2,moveset[2])
         move_selected=moveset[2].get_name()
-    print("Step4")
     if moveset[3] is not None and (damage_calcul(pokemon1,pokemon2,moveset[3])>max_damage):
         max_damage=damage_calcul(pokemon1,pokemon2,moveset[3])
         move_selected=moveset[3].get_name()
     return move_selected,max_damage
 
+def assert_opponent_pokemon_threat(pokemon1,pokemon2):
+    pokemon_type=Pokemon.get_types(pokemon2)
+    max_damage=0
+    for type_pokemon in pokemon_type:
+        attackphy=Move(type_pokemon+'phy',None,None,False,10,None)
+        attackphy.update_smogon_data(type_pokemon,'physical','100','100','stabed attack')
+        attackspe=Move(type_pokemon+'phy',None,None,False,10,None)
+        attackspe.update_smogon_data(type_pokemon,'special','100','100','stabed attack')
+        #print(Move.get_move_type(attackspe))
+        phy_damage=damage_calcul(pokemon2,pokemon1,attackphy)
+        spe_damage=damage_calcul(pokemon2,pokemon1,attackspe)
+        if (max_damage<phy_damage):
+            max_damage=phy_damage
+        if (max_damage<spe_damage):
+            max_damage=spe_damage
+    return max_damage
 
 """
 new_attack=Move('Flamethrower',None,None,False,10,None)
@@ -123,4 +145,7 @@ print("damages : ", damages)
 
 move_selected, max_dmg = select_move(new_pokemon,new_pokemon2)
 print("best move : ", move_selected, " (", max_dmg, ")")
+
+max_dmg = assert_opponent_pokemon_threat(new_pokemon,new_pokemon2)    
+print("opp threat : ", max_dmg)
 """
