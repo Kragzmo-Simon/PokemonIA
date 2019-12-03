@@ -976,6 +976,14 @@ class Battle(Room):
                 return
 
         # TODO Send a default move
+        print("On arrive ici lol......")
+        possible_default_moves=pokemon1.get_possible_moves()
+        if len(possible_default_moves) != 0:
+            default_command_to_send = possible_default_moves[0].get_name()
+            await self.move(default_command_to_send,1)
+        else:
+            await self.make_switch()
+
 
 
     @utils.require_client
