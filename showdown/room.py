@@ -932,34 +932,37 @@ class Battle(Room):
 
         active_pokemon_move_selected_should_be_used = False
         if active_pokemon_max_dmg >= 100 and active_pokemon_speed_tie_won:
-            #print("on utilise 1 : ", active_pokemon_move_selected)
+            print("choose move (1) : ", active_pokemon_move_selected)
             active_pokemon_move_selected_should_be_used = True
         if active_pokemon_max_dmg >= active_pokemon_tanking_capacity and active_pokemon_speed_tie_won:
-            #print("on utilise 2 : ", active_pokemon_move_selected)
+            print("choose move (2) : ", active_pokemon_move_selected)
             active_pokemon_move_selected_should_be_used = True
         if active_pokemon_max_dmg >= 100 and active_pokemon_tanking_capacity < 90:
-            #print("on utilise 3 : ", active_pokemon_move_selected)
+            print("choose move (3) : ", active_pokemon_move_selected)
             active_pokemon_move_selected_should_be_used = True
         if active_pokemon_max_dmg >= 50 and active_pokemon_tanking_capacity < 45:
-            #print("on utilise 4 : ", active_pokemon_move_selected)
+            print("choose move (4) : ", active_pokemon_move_selected)
             active_pokemon_move_selected_should_be_used = True
 
         if active_pokemon_move_selected_should_be_used:
             # TODO Send command for move
-            #print("I choose this move : ", active_pokemon_move_selected)
+            print("Declaring a well calculated move : ", active_pokemon_move_selected)
             await self.move(active_pokemon_move_selected,1)
             return
 
         print("Calculating switch options")
 
         for switch in possible_switchs:
+            print("Checking switch : ", switch)
             switch_pokemon = self.own_team.get_pokemon(switch)
+            print("Pokemon ", switch, "retrieved")
 
             switch_pokemon_move_selected = None
             switch_pokemon_max_dmg = 0
             switch_pokemon_speed_tie_won = False
             switch_pokemon_tanking_capacity = 0
             if switch_pokemon is not None and pokemon2 is not None:
+                print("Calculating switch heuristics")
                 switch_pokemon_move_selected, switch_pokemon_max_dmg = select_move(switch_pokemon,pokemon2)
                 switch_pokemon_speed_tie_won = determince_speed_tie(switch_pokemon, pokemon2)
                 switch_pokemon_tanking_capacity = assert_opponent_pokemon_threat(switch_pokemon, pokemon2)
@@ -969,31 +972,38 @@ class Battle(Room):
                 #print("----best move : ", switch_pokemon_move_selected, " (", switch_pokemon_max_dmg, ")")
                 #print("----tanking capacity : ", switch_pokemon_tanking_capacity)
 
+            print("Determining switch reliability")
             switch_pokemon_should_be_used = False
             if switch_pokemon_speed_tie_won and switch_pokemon_max_dmg >= 100 and switch_pokemon_tanking_capacity < 90:
-                #print("on utilise 5 : ", switch_pokemon.get_name())
+                print("choose switch (5) : ", switch_pokemon.get_name())
                 switch_pokemon_should_be_used = True
             if switch_pokemon_tanking_capacity < 25 and switch_pokemon_max_dmg > (2 * switch_pokemon_tanking_capacity):
-                #print("on utilise 6 : ", switch_pokemon.get_name())
+                print("choose switch (6) : ", switch_pokemon.get_name())
                 switch_pokemon_should_be_used = True
             if switch_pokemon_max_dmg >= 100 and switch_pokemon_tanking_capacity < 45:
-                #print("on utilise 7 : ", switch_pokemon.get_name())
+                print("choose switch (7) : ", switch_pokemon.get_name())
                 switch_pokemon_should_be_used = True
 
             if switch_pokemon_should_be_used:
                 # TODO send command for switch
                 #print("I choose this switch : ", switch_pokemon.get_name())
+                print("Declaring a well calculated switch : ", switch)
                 await self.switch(switch_pokemon.get_name(),1)
                 return
 
         # TODO Send a default move
         print("Using Default Move")
         possible_default_moves=pokemon1.get_possible_moves()
+        print("Default moves retrieved")
         if len(possible_default_moves) != 0:
             default_command_to_send = possible_default_moves[0].get_name()
+            print("Declaring a default move")
             await self.move(default_command_to_send,1)
+            return
         else:
+            print("Declaring a default switch")
             await self.make_switch()
+            return
 
 
 
