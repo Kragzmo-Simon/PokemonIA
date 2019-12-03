@@ -874,7 +874,9 @@ class Battle(Room):
         #self.opponent_team.print_active_pokemon()
         #self.own_team.print_active_pokemon()
 
-        possible_moves = self.own_team.get_active_pokemon_possible_moves()
+
+        print("Making a decision")
+        #possible_moves = self.own_team.get_active_pokemon_possible_moves()
 
         await self.select_best_decision()
 
@@ -923,23 +925,25 @@ class Battle(Room):
 
         active_pokemon_move_selected_should_be_used = False
         if active_pokemon_max_dmg >= 100 and active_pokemon_speed_tie_won:
-            print("on utilise 1 : ", active_pokemon_move_selected)
+            #print("on utilise 1 : ", active_pokemon_move_selected)
             active_pokemon_move_selected_should_be_used = True
         if active_pokemon_max_dmg >= active_pokemon_tanking_capacity and active_pokemon_speed_tie_won:
-            print("on utilise 2 : ", active_pokemon_move_selected)
+            #print("on utilise 2 : ", active_pokemon_move_selected)
             active_pokemon_move_selected_should_be_used = True
         if active_pokemon_max_dmg >= 100 and active_pokemon_tanking_capacity < 90:
-            print("on utilise 3 : ", active_pokemon_move_selected)
+            #print("on utilise 3 : ", active_pokemon_move_selected)
             active_pokemon_move_selected_should_be_used = True
         if active_pokemon_max_dmg >= 50 and active_pokemon_tanking_capacity < 45:
-            print("on utilise 4 : ", active_pokemon_move_selected)
+            #print("on utilise 4 : ", active_pokemon_move_selected)
             active_pokemon_move_selected_should_be_used = True
 
         if active_pokemon_move_selected_should_be_used:
             # TODO Send command for move
-            print("I choose this move : ", active_pokemon_move_selected)
+            #print("I choose this move : ", active_pokemon_move_selected)
             await self.move(active_pokemon_move_selected,1)
             return
+
+        print("Considering a switch")
 
         for switch in possible_switchs:
             switch_pokemon = self.own_team.get_pokemon(switch)
@@ -960,23 +964,23 @@ class Battle(Room):
 
             switch_pokemon_should_be_used = False
             if switch_pokemon_speed_tie_won and switch_pokemon_max_dmg >= 100 and switch_pokemon_tanking_capacity < 90:
-                print("on utilise 5 : ", switch_pokemon.get_name())
+                #print("on utilise 5 : ", switch_pokemon.get_name())
                 switch_pokemon_should_be_used = True
             if switch_pokemon_tanking_capacity < 25 and switch_pokemon_max_dmg > (2 * switch_pokemon_tanking_capacity):
-                print("on utilise 6 : ", switch_pokemon.get_name())
+                #print("on utilise 6 : ", switch_pokemon.get_name())
                 switch_pokemon_should_be_used = True
             if switch_pokemon_max_dmg >= 100 and switch_pokemon_tanking_capacity < 45:
-                print("on utilise 7 : ", switch_pokemon.get_name())
+                #print("on utilise 7 : ", switch_pokemon.get_name())
                 switch_pokemon_should_be_used = True
 
             if switch_pokemon_should_be_used:
                 # TODO send command for switch
-                print("I choose this switch : ", switch_pokemon.get_name())
+                #print("I choose this switch : ", switch_pokemon.get_name())
                 await self.switch(switch_pokemon.get_name(),1)
                 return
 
         # TODO Send a default move
-        print("On arrive ici lol......")
+        print("Using Default Move")
         possible_default_moves=pokemon1.get_possible_moves()
         if len(possible_default_moves) != 0:
             default_command_to_send = possible_default_moves[0].get_name()
