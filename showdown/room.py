@@ -611,8 +611,14 @@ class Battle(Room):
 
                 switch_event_player = switch_event_pokemon_and_player[0].replace("a","").strip()
                 switch_event_pokemon = switch_event_pokemon_and_player[1].replace("'","").replace(" ","").replace("-","").replace(",","").replace(".","").strip().lower()
-                switch_event_pokemon_level = switch_infos[2].split(",")[1].replace("L","").strip()
-                switch_event_pokemon_current_hp = switch_infos[3].split("/")[0]
+
+                if switch_event_pokemon == "type":
+                    switch_event_pokemon = "typenull"
+                    switch_event_pokemon_level = switch_infos[3].split(",")[1].replace("L","").strip()
+                    switch_event_pokemon_current_hp = switch_infos[4].split("/")[0]
+                else:
+                    switch_event_pokemon_level = switch_infos[2].split(",")[1].replace("L","").strip()
+                    switch_event_pokemon_current_hp = switch_infos[3].split("/")[0]
                 switch_event_pokemon_max_hp = 100
 
                 pokemon_switch = [switch_event_player,
