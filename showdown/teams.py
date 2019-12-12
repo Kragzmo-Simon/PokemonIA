@@ -6,24 +6,16 @@ class Team:
     """
     def __init__(self, player):
         self.player = player # either p1 or p2
-        #self.pokemons = [None] * 6
         self.pokemons = []
         self.buffs = Side_Buffs()
 
-        # This index tracks the next index of self.pokemons that should be added
-        # If it is equal to 6, then the team is full
-        #self.pokemon_index_to_add = 0
-
     def raise_stat(self, stat_name, levels):
-        #print("Applying Buff : ", stat_name, " +", levels," (", self.player, ")")
         self.buffs.raise_stat(stat_name, levels)
 
     def lower_stat(self, stat_name, levels):
-        #print("Applying Debuff : ", stat_name, " -", levels," (", self.player, ")")
         self.buffs.lower_stat(stat_name, levels)
 
     def reset_buffs(self):
-        #print("Reseting buffs : ", self.player)
         self.buffs.reset()
 
     def set_all_pokemons_to_inactive(self):
@@ -43,11 +35,6 @@ class Team:
     def add_pokemon(self, pokemon):
         if len(self.pokemons) <= 5:
             self.pokemons.append(pokemon)
-        """
-        if self.pokemon_index_to_add < 6:
-            self.pokemons[self.pokemon_index_to_add] = pokemon
-            self.pokemon_index_to_add += 1
-        """
 
     def self_print(self):
         for pokemon in self.pokemons:
@@ -92,13 +79,10 @@ class Team:
         # returns False if data has not been updated and True if it has been updated
         for pokemon in self.pokemons:
             if pokemon is not None:
-                #print("Checking : ", pokemon.get_name())
                 smogon_update, moves_or_pok_to_resend = pokemon.has_been_updated_with_smogon()
                 if not smogon_update:
                     return False, moves_or_pok_to_resend
-                #print("Pokemon correctly updated : ", pokemon.get_name())
             else:
-                print("A pokemon is NONE")
                 return False, []
         print("The team was correctly updated : ", self.player)
         return True, []
@@ -110,7 +94,7 @@ class Team:
     def update_pokemons_with_smogon(self, smogon_pokemon):
         for pokemon in self.pokemons:
             if smogon_pokemon.has_name(pokemon.get_name()):
-                #print("Updating this pokemon : ", pokemon.get_name())
+                print("Updating this pokemon : ", pokemon.get_name())
                 types_collection = smogon_pokemon.get_types()
                 abilities_collection = smogon_pokemon.get_abilities_collection()
                 base_hp = smogon_pokemon.get_base_hp()
@@ -325,9 +309,6 @@ class Pokemon:
     def set_current_hp(self, new_current_hp):
         self.current_hp=str(new_current_hp)
 
-    def set_current_hp(self,new_current_hp):
-        self.current_hp=str(new_current_hp)
-
     def get_attack(self):
         return self.attack
     
@@ -362,9 +343,7 @@ class Pokemon:
         # check that the pokemon moves have been loaded
         if len(self.complete_moves) != len(self.moves_names):
             print("Moveset not yet fully loaded (", self.name,")")
-
             # get the moves that have not been updated correctly to send the data commands
-            #self.self_print()
 
             # moves the current pokemon actually knows
             known_moves = []
@@ -375,24 +354,19 @@ class Pokemon:
             moves_names_to_resend = []
             for move_name in self.moves_names:
                 if move_name not in known_moves:
-                    print("\nMove ", move_name, " not known")
-                    print("known moves : ", known_moves)
-                    print("supposedly known moves : ", self.moves_names, "\n")
                     moves_names_to_resend.append(move_name)
             return False, moves_names_to_resend
 
         # check if each one of the moves has not been updated
         for move in self.complete_moves:
-            #print("Checking ", move.get_name())
-            if move is not None and not move.has_been_updated_with_smogon():
-                print("Move has not been updated : ", move.get_name())
-                return False, [move.get_name()]
-            #else:
-            #    print("Move correctly updated : ", move.get_name())
+            if move is not None:
+                if move is not None and not move.has_been_updated_with_smogon():
+                    print("Move has not been updated : ", move.get_name())
+                    return False, [move.get_name()]
         
         # check if the pokemon has been updated
         if not self.smogon_data_has_been_retrieved:
-            #print("Pokemon has not been updated : ", self.name)
+            print("Pokemon has not been updated : ", self.name)
             return False, [self.name]
         return True, []
 
@@ -429,7 +403,7 @@ class Pokemon:
                     else:
                         # pokemon active just fainted or used uturn
                         # or is using outrage (other moves have not been loaded)
-                        print("ERREUR MOVE NONE : ", move_name)
+                        print("UPDATING A MOVE NONE : ", move_name)
                         pok_is_using_trapping_move = True
 
                         # TODO Temporary fix
@@ -457,8 +431,6 @@ class Pokemon:
                     new_move_set = self.complete_moves
                     new_move_set.append(new_move)
                     self.update_moves(new_move_set)
-
-                #print("Updating ", move_name, " (", self.name,")")
 
     def self_print(self):
         print("\n", self.smogon_id, " - ", self.name, " (level", self.level,",", self.gender,") - active : ", self.active)
@@ -512,9 +484,6 @@ class Move:
 
         # boolean to check if the smogon data has been retrieved and used
         self.smogon_data_has_been_retrieved = False
-
-        # self.gigamax = mettre toutes les infos du maxmove directement dans le move plutot que
-        # de creer un second move
 
     def update_smogon_data(self, move_type, category, power, accuracy, description):
         self.types = move_type

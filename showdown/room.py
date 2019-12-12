@@ -223,11 +223,11 @@ class Battle(Room):
                 needs_a_force_switch = re.findall(r"\[.*?\]", check_force_switch[0])[0].replace("[","").replace("]","").strip()
                 force_Switch_needed = True
                 if needs_a_force_switch == "true":
-                    print("Force switch received")
+                    pass
             else:
                 pokemon_is_trapped = re.findall(r"trapped.*?:.*?}", active_pokemon_moves[0])
                 if len(pokemon_is_trapped) != 0 and "trapped" in pokemon_is_trapped[0]:
-                    print("He's trapped")
+                    pass
                     # TODO : make all other moves disabled
 
                 # dissociate normal moves info from maxmoves info
@@ -252,7 +252,6 @@ class Battle(Room):
                         disabled = None
                         
                     new_move = Move(name, smogon_id, target, disabled, current_pp, max_pp)
-                    #new_move.self_print()
                     active_pokemon_moves_to_add.append(new_move)
 
             # player name
@@ -322,13 +321,6 @@ class Battle(Room):
                 move3 = pokemon_full_moveset[2]
                 move4 = pokemon_full_moveset[3]
 
-                """
-                # For Debug concerns
-                if name == "Null" or name == "null" or name == "Type" or name == "type":
-                    print("Pokemon Null : ", socket_input)
-                    name = "type:null"
-                """
-
                 if len(stats) == 19:
                     gender = stats[3].replace("\\\"","").strip()
                 else:
@@ -375,31 +367,9 @@ class Battle(Room):
             if force_Switch_needed:
                 await self.make_switch()
 
-            # these moves are the ones we already data from smogon
-            # (here, the real ones are supposed to be more or less empty
-            # but the names ones should be full)
-            """
-            #Code to debug moveset, is currently useless 
-            real_collection_moves_names = []
-            for move in self.moves_collection:
-                real_collection_moves_names.append(move.get_name())
-            print("collection moves : ", len(self.moves_name_collection))
-            print("collection moves real: ", len(self.moves_collection))
-            print("collection pokemons : ", len(self.pokemon_names_collection))
-            print("collection pokemons real : ", len(self.pokemon_collection))
-            """
-
-            """
-            # Maxmoves
-            maxmoves = re.findall(r"{.*?}", categories[1])
-            for maxmove in maxmoves:
-                maxmove_lines = re.split(r",",maxmove)
-                maxmove_name = maxmove_lines[0].split(r":")[-1].replace("\\\"","").strip()
-                maxmove_target = maxmove_lines[1].split(r":")[-1].replace("}","").replace("\\\"","").strip()
-            """
         except IndexError as err:
             print(".................. Erreur : ", err)
-            print("L'input faible : ", socket_input)
+            print("Error in parsing this input : ", socket_input)
 
     def update_smogon_data_pokemon(self, socket_input):
         # move name
@@ -453,21 +423,6 @@ class Battle(Room):
         # update on allied pokemons
         self.own_team.update_pokemons_with_smogon(new_pokemon)
 
-        # Display
-        """
-        print("\nname : " ,pokemon_name)
-        for pok_type in pokemon_types_collection:
-            print("type : ", pok_type)
-        for ability in pokemon_abilities_collection:
-            print("ability : ", ability)
-        print("hp : ", pokemon_hp)
-        print("atk : ", pokemon_atk)
-        print("def : ", pokemon_def)
-        print("speA : ", pokemon_speA)
-        print("speD : ", pokemon_speD)
-        print("spe : ", pokemon_spe)
-        """
-
     def update_smogon_data_move(self, socket_input):
         # move name
         move_link = re.findall(r"<a.*href.*?</a>", socket_input)
@@ -486,7 +441,7 @@ class Battle(Room):
             move_accuracy = caracteristics[-2].replace("<br>","").replace("</span>","").replace("%","").strip()
         else:
             move_accuracy = caracteristics[0].replace("<br>","").replace("</span>","").replace("%","").strip()
-            # if move_accuracy is_number
+            # TODO check if accuracy is a number (or "-")
 
         # additional info
         description = re.findall(r"movedesccol.*?</span>", socket_input)
@@ -506,15 +461,6 @@ class Battle(Room):
         self.own_team.update_moves_with_smogon(new_move)
 
         # TODO add verification for enemy team
-        #new_move.self_print()
-        """
-        print("\nmove : " ,move_name)
-        print("type : ", move_type)
-        print("category : ", move_category)
-        print("power : ", move_power)
-        print("accuracy : ", move_accuracy)
-        print("description : ", move_description)
-        """
 
     async def update_turn(self, socket_input):
         # create opponent team
@@ -645,25 +591,18 @@ class Battle(Room):
                     self.opponent_team.reset_buffs()
                 if self.own_team.get_player() == switch_event_player:
                     self.own_team.reset_buffs()
-
-        # Résumé du tour
-        #print(damage_event_player, " / ", damage_event_pokemon, " => ", damage_event_current_hp, " / ", 
-        #            damage_event_max_hp, "(", damage_event_type,")")
         
         for boost in boost_events_collection:
-            #print(boost[0], " / ", boost[1], " => ", boost[2], " +", boost[3])
             if boost[0] == self.opponent_team.get_player():
                 self.opponent_team.raise_stat(boost[2],boost[3])
             if boost[0] == self.own_team.get_player():
                 self.own_team.raise_stat(boost[2],boost[3])
         for unboost in unboost_events_collection:
-            #print(unboost[0], " / ", unboost[1], " => ", unboost[2], " -", unboost[3])
             if unboost[0] == self.opponent_team.get_player():
                 self.opponent_team.lower_stat(unboost[2],unboost[3])
             if unboost[0] == self.own_team.get_player():
                 self.own_team.lower_stat(unboost[2],unboost[3])            
         for switch in switch_events_collection:
-            #print("switch : ", switch[0], " - ", switch[1], " (", switch[2], ")", switch[3], " / ", switch[4])
             if switch[0] == self.opponent_team.get_player():
                 pokemon_names = self.opponent_team.get_pokemon_names()
 
@@ -684,8 +623,6 @@ class Battle(Room):
                     self.opponent_team.set_all_pokemons_to_inactive()
                     self.opponent_team.make_pokemon_active(switch[1])
 
-                    #current_pokemon = self.opponent_team.get_pokemon(switch[1])
-                    #current_pokemon.self_print()
         # If damage kills opponent pokemon, make all opponent's pokemons inactive
         if damage_event_player == self.opponent_team.get_player():
             if damage_event_current_hp == "0" and damage_event_type == "damage":
@@ -840,7 +777,7 @@ class Battle(Room):
                     if old_moves_collection_size == current_moves_collection_size:
                         # This part checks all moves present in the collection and then sends data for
                         # each move that should be in it but is not (move information has not been received)
-                        print("RESENDING DATA : ", 
+                        print("Check for data to request (resend) : ", 
                                 current_moves_collection_size, " / ",
                                 current_moves_name_collection_size)
                         # get the missing moves names
@@ -848,13 +785,10 @@ class Battle(Room):
                         for collection_move in self.moves_collection:
                             current_moves_real_collection_names.append(collection_move.get_name())
 
-                        print("current collection : ", current_moves_real_collection_names)
-                        print("supposed collection : ", self.moves_name_collection)
-
                         # resend the command data to smogon
                         for move_name in self.moves_name_collection:
                             if move_name not in current_moves_real_collection_names:
-                                print("Resending : ", move_name)
+                                print("Resending (first check) : ", move_name)
                                 await self.get_M_or_P_data(move_name)
 
                 old_moves_name_collection_size = current_moves_name_collection_size
@@ -880,53 +814,23 @@ class Battle(Room):
                 # resend data commands if need be
                 if smogon_data_has_not_been_updated:
                     for data_command_name in data_commands_names_to_resend:
-                        print("Resending 2 : ", data_command_name)
+                        print("Resending (second check) : ", data_command_name)
                         await self.get_M_or_P_data(data_command_name)
 
-                #print("Checking smogon data update...................... : ", smogon_data_has_not_been_updated)
             await asyncio.sleep(2)
 
-        #self.opponent_team.print_active_pokemon()
-        #self.own_team.print_active_pokemon()
-
-
-        print("Making a decision")
-        #possible_moves = self.own_team.get_active_pokemon_possible_moves()
-
         await self.select_best_decision()
-
-        #for move in possible_moves:
-        #    print("dat id : ", move.get_smogon_id())
-
-        # 1/4 chance of switching (switch_or_move=0) and 3/4 chance of moving (switch_or_move=1,2 or 3)
-        """
-        switch_or_move = random.randint(0,4)
-        if switch_or_move and len(possible_moves) > 0:
-            # will be used more effectively than just a randomint when the intelligent logic will be called
-            randomly_generated_move_id = random.randint(1,len(possible_moves))
-            move_id = possible_moves[randomly_generated_move_id-1].get_smogon_id() + 1
-            await self.move(move_id,1)
-        else:
-            await self.make_switch()
-        """
 
     # fonction qui renvoie le meilleur switch ou move à effectuer
     @utils.require_client
     async def select_best_decision(self, client=None,
         delay=0, lifespan=math.inf):
 
-        print("Retrieving data...")
         # get both active pokemons and other switchs
         pokemon1 = self.own_team.get_active_pokemon()
-        print("pokemon1 retrieved")
         pokemon2 = self.opponent_team.get_active_pokemon()
-        print("pokemon2 retrieved")
         pokemon2.set_stats_enemy_pokemon()
-        print("stats update done")
         possible_switchs = self.own_team.get_possible_pokemon_switch()
-        print("switch options retrieved")
-
-        print("Calculating active pokemon options")
 
         # heuristics for the active pokemon (considering a direct move)
         active_pokemon_move_selected = None
@@ -934,89 +838,52 @@ class Battle(Room):
         active_pokemon_speed_tie_won = False
         active_pokemon_tanking_threat = 0
         if pokemon1 is not None and pokemon2 is not None:
-            print("selecting a move")
             active_pokemon_move_selected, active_pokemon_max_dmg = select_move(pokemon1,pokemon2)
-            print("determining speed tie")
             active_pokemon_speed_tie_won = determince_speed_tie(pokemon1, pokemon2)
-            print("determing tanking capacity")
             active_pokemon_tanking_threat = assert_opponent_pokemon_threat(pokemon1, pokemon2)
-            print("active pokemon options calculation done")
-
-            #print("checking : ", pokemon1.get_name(), " / ", pokemon2.get_name())
-            #print("dat speed tie : ", active_pokemon_speed_tie_won)
-            #print("_______________best move : ", active_pokemon_move_selected, " (", active_pokemon_max_dmg, ")")
-            #print("tanking capacity : ", active_pokemon_tanking_threat)
         else:
             print("Erreur : un des pokemons est None")
 
         active_pokemon_move_selected_should_be_used = False
         if active_pokemon_max_dmg >= 100 and active_pokemon_speed_tie_won:
-            print("choose move (1) : ", active_pokemon_move_selected)
             active_pokemon_move_selected_should_be_used = True
         if active_pokemon_max_dmg >= active_pokemon_tanking_threat and active_pokemon_speed_tie_won:
-            print("choose move (2) : ", active_pokemon_move_selected)
             active_pokemon_move_selected_should_be_used = True
         if active_pokemon_max_dmg >= 100 and active_pokemon_tanking_threat < 90:
-            print("choose move (3) : ", active_pokemon_move_selected)
             active_pokemon_move_selected_should_be_used = True
         if active_pokemon_max_dmg >= 50 and active_pokemon_tanking_threat < 45:
-            print("choose move (4) : ", active_pokemon_move_selected)
             active_pokemon_move_selected_should_be_used = True
 
         if active_pokemon_move_selected_should_be_used:
-            # TODO Send command for move
-            print("Declaring a well calculated move : ", active_pokemon_move_selected)
             await self.move(active_pokemon_move_selected,1)
             return
 
-        print("Calculating switch options")
-
         for switch in possible_switchs:
-            print("Checking switch : ", switch)
             switch_pokemon = self.own_team.get_pokemon(switch)
-            print("Pokemon ", switch, "retrieved")
 
             switch_pokemon_move_selected = None
             switch_pokemon_max_dmg = 0
             switch_pokemon_speed_tie_won = False
             switch_pokemon_tanking_threat = 0
             if switch_pokemon is not None and pokemon2 is not None:
-                print("selecting a move")
                 switch_pokemon_move_selected, switch_pokemon_max_dmg = select_move(switch_pokemon,pokemon2)
-                print("determining speed tie")
                 switch_pokemon_speed_tie_won = determince_speed_tie(switch_pokemon, pokemon2)
-                print("determing tanking capacity")
                 switch_pokemon_tanking_threat = assert_opponent_pokemon_threat(switch_pokemon, pokemon2)
-                print("switch pokemon options calculation done")
 
-                #print("----checking : ", switch_pokemon.get_name(), " / ", pokemon2.get_name())
-                #print("----dat speed tie : ", switch_pokemon_speed_tie_won)
-                #print("----best move : ", switch_pokemon_move_selected, " (", switch_pokemon_max_dmg, ")")
-                #print("----tanking capacity : ", switch_pokemon_tanking_threat)
-
-            print("Determining switch reliability")
             switch_pokemon_should_be_used = False
             if switch_pokemon_speed_tie_won and switch_pokemon_max_dmg >= 100 and switch_pokemon_tanking_threat < 90:
-                print("choose switch (5) : ", switch_pokemon.get_name())
                 switch_pokemon_should_be_used = True
             if switch_pokemon_tanking_threat < 25 and switch_pokemon_max_dmg > (2 * switch_pokemon_tanking_threat):
-                print("choose switch (6) : ", switch_pokemon.get_name())
                 switch_pokemon_should_be_used = True
             if switch_pokemon_max_dmg >= 100 and switch_pokemon_tanking_threat < 45:
-                print("choose switch (7) : ", switch_pokemon.get_name())
                 switch_pokemon_should_be_used = True
 
             if switch_pokemon_should_be_used:
-                # TODO send command for switch
-                #print("I choose this switch : ", switch_pokemon.get_name())
-                print("Declaring a well calculated switch : ", switch)
                 await self.switch(switch_pokemon.get_name(),1)
                 return
 
-        # TODO Send a default move
-        print("Using Default Move")
+        print("Choosing Default Move")
         possible_default_moves=pokemon1.get_possible_moves()
-        print("Default moves retrieved")
         for default_move in possible_default_moves:
             if default_move.has_power():
                 # select a move that has power
@@ -1026,19 +893,6 @@ class Battle(Room):
         print("Declaring a default switch")
         await self.make_switch()
         return
-        """
-        if len(possible_default_moves) != 0:
-            default_command_to_send = possible_default_moves[0].get_name()
-            print("Declaring a default move")
-            await self.move(default_command_to_send,1)
-            return
-        else:
-            print("Declaring a default switch")
-            await self.make_switch()
-            return
-        """
-
-
 
     @utils.require_client
     async def make_switch(self, client=None,
@@ -1047,70 +901,34 @@ class Battle(Room):
         Sends a command that performs a switch.
         """
 
-        """
-        possible_switchs = self.own_team.get_possible_pokemon_switch()
-
-        if len(possible_switchs) == 0:
-            print("Erreur : aucun switch possible")
-        else:
-            randomly_generated_switch_id = random.randint(0,len(possible_switchs)-1)
-            switch_id = possible_switchs[randomly_generated_switch_id]
-
-            await self.switch(switch_id,1)
-        """
-
         pokemon2 = self.opponent_team.get_active_pokemon()
         possible_switchs = self.own_team.get_possible_pokemon_switch()
-        print("pokemon2 retrieved")
         if pokemon2 is not None:
             pokemon2.set_stats_enemy_pokemon()
-            print("stats update done")
-
-            print("Calculating switch options")
 
             for switch in possible_switchs:
-                print("Checking switch : ", switch)
                 switch_pokemon = self.own_team.get_pokemon(switch)
-                print("Pokemon ", switch, "retrieved")
 
                 switch_pokemon_move_selected = None
                 switch_pokemon_max_dmg = 0
                 switch_pokemon_speed_tie_won = False
                 switch_pokemon_tanking_threat = 0
                 if switch_pokemon is not None and pokemon2 is not None:
-                    print("selecting a move")
                     switch_pokemon_move_selected, switch_pokemon_max_dmg = select_move(switch_pokemon,pokemon2)
-                    print("determining speed tie")
                     switch_pokemon_speed_tie_won = determince_speed_tie(switch_pokemon, pokemon2)
-                    print("determing tanking capacity")
                     switch_pokemon_tanking_threat = assert_opponent_pokemon_threat(switch_pokemon, pokemon2)
-                    print("switch pokemon options calculation done")
 
-                    #print("----checking : ", switch_pokemon.get_name(), " / ", pokemon2.get_name())
-                    #print("----dat speed tie : ", switch_pokemon_speed_tie_won)
-                    #print("----best move : ", switch_pokemon_move_selected, " (", switch_pokemon_max_dmg, ")")
-                    #print("----tanking capacity : ", switch_pokemon_tanking_threat)
-
-                print("Determining switch reliability")
                 switch_pokemon_should_be_used = False
                 if switch_pokemon_speed_tie_won and switch_pokemon_max_dmg >= 100:
-                    print("choose switch (8) : ", switch_pokemon.get_name())
                     switch_pokemon_should_be_used = True
-                #if switch_pokemon_tanking_threat < 25 and switch_pokemon_max_dmg > (2 * switch_pokemon_tanking_threat):
                 if switch_pokemon_max_dmg >= switch_pokemon_tanking_threat and switch_pokemon_speed_tie_won:
-                    print("choose switch (9) : ", switch_pokemon.get_name())
                     switch_pokemon_should_be_used = True
                 if switch_pokemon_max_dmg >= 100 and switch_pokemon_tanking_threat < 90:
-                    print("choose switch (10) : ", switch_pokemon.get_name())
                     switch_pokemon_should_be_used = True
                 if switch_pokemon_max_dmg >= 50 and switch_pokemon_tanking_threat < 45:
-                    print("choose switch (11) : ", switch_pokemon.get_name())
                     switch_pokemon_should_be_used = True
 
                 if switch_pokemon_should_be_used:
-                    # TODO send command for switch
-                    #print("I choose this switch : ", switch_pokemon.get_name())
-                    print("Declaring a well calculated switch : ", switch)
                     await self.switch(switch_pokemon.get_name(),1)
                     return
         

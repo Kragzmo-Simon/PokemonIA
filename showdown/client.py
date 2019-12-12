@@ -291,8 +291,6 @@ class Client(user.User):
         socket_input = await self.websocket.recv()
         logger.debug('<<< Received:\n{}'.format(socket_input))
 
-        #print("\nLast message from showdown : \n", socket_input)
-
         if "error" in socket_input:
             print("\nErreur ici : ", socket_input)
 
@@ -302,9 +300,6 @@ class Client(user.User):
             for key in self.rooms:
                 current_battle = self.rooms.get(key)
                 await current_battle.update_own_team(socket_input)
-            print("UPDATE OF STATE DONE")
-
-        #if "wait"
 
         if "turn|" in socket_input or "|upkeep" in socket_input:
             print("UPDATING TURN")
@@ -314,8 +309,6 @@ class Client(user.User):
                 if "turn|" in socket_input:
                     current_battle.add_turn()
                 await current_battle.update_turn(socket_input)
-                #current_battle.print_own_team()
-            print("UPDATE OF TURN DONE")
 
         if "|raw|" in socket_input and "pokemonnamecol" in socket_input:
             print("UPDATING POKEMON INFO")
@@ -323,7 +316,6 @@ class Client(user.User):
             for key in self.rooms:
                 current_battle = self.rooms.get(key)
                 current_battle.update_smogon_data_pokemon(socket_input)
-            print("UPDATE OF POKEMON DONE")
 
         if "|raw|" in socket_input and "movenamecol" in socket_input:
             print("UPDATING POKEMON INFO")
@@ -331,8 +323,6 @@ class Client(user.User):
             for key in self.rooms:
                 current_battle = self.rooms.get(key)
                 current_battle.update_smogon_data_move(socket_input)
-            print("UPDATE OF MOVE DONE")
-
 
         #Showdown sends this response on initial connection
         if socket_input == 'o':
